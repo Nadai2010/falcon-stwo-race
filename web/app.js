@@ -43,7 +43,7 @@ async function init() {
     drawPlot(lane.id);
   });
   loadPeople();
-  mainnet({ lane: "falcon", state: "recorded" });
+  clearMainnet();
   const rp = new URLSearchParams(location.search).get("replay");
   if (rp !== null) replay(rp === "sequential" ? "sample-run-sequential.json" : "sample-run.json");
   $("#go").addEventListener("click", toggle);
@@ -165,6 +165,7 @@ function reset(id) {
     $(`.gasbar[data-side="${side}"]`, v.el).classList.remove("scan");
     $(`.gasbar[data-side="${side}"] i`, v.el).style.width = "0";
     $(`.gasbar[data-side="${side}"] b`, v.el).textContent = "";
+    if (id === "falcon") clearMainnet();
 
   }
   drawPlot(id);
@@ -276,6 +277,18 @@ function verdict(lane) {
   $(".verdict-txt", box).textContent = text;
   box.hidden = false;
   box.classList.remove("pop"); void box.offsetWidth; box.classList.add("pop");
+}
+
+// Empty until the Falcon race has finished and signed: nothing is priced before that.
+function clearMainnet() {
+  const v = state.view.falcon;
+  const box = v && $(".mainnet", v.el);
+  if (!box) return;
+  box.classList.remove("busy");
+  for (const el of box.querySelectorAll(".mn-strk, .mn-usd")) el.textContent = "—";
+  $(".mn-ratio", box).textContent = "";
+  $(".mn-meta", box).textContent = "priced after the Falcon race";
+  $(".mn-src", box).textContent = "";
 }
 
 // Mainnet price of one Falcon-signed transaction per account: live simulation, or the recorded one.
