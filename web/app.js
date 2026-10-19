@@ -26,6 +26,9 @@ async function init() {
     $(".lane-title", el).textContent = lane.title;
     $(".lane-sub", el).textContent = lane.subtitle;
     $(".official", el).innerHTML = `${lane.official.text} <a href="${lane.official.source}" target="_blank" rel="noopener">source</a>, ${lane.official.date}.`;
+    const ch = $(".challenge", el);
+    ch.href = lane.challenge.url;
+    $("span", ch).textContent = lane.challenge.text;
     for (const side of ["original", "record"]) {
       const s = $(`.side[data-side="${side}"]`, el);
       $(".side-label", s).textContent = lane[side].label;
@@ -43,18 +46,18 @@ async function init() {
   const rp = new URLSearchParams(location.search).get("replay");
   if (rp !== null) replay(rp === "sequential" ? "sample-run-sequential.json" : "sample-run.json");
   $("#go").addEventListener("click", toggle);
-  $("#fit").addEventListener("click", () => setStage(!document.body.classList.contains("stage")));
-  let stage = new URLSearchParams(location.search).has("stage");
-  try { stage = stage || localStorage.getItem("stage") === "1"; } catch {}
-  setStage(stage);
+
   state.eyebrow = $(".eyebrow").textContent;
   window.addEventListener("keydown", (e) => {
     if (e.target.closest("input, textarea") || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
     if (e.key === "r" || e.key === "R") start();
     if (e.key === "Escape") stop();
-    if (e.key === "f" || e.key === "F") setStage(!document.body.classList.contains("stage"));
   });
   window.addEventListener("resize", () => state.lanes.forEach((l) => drawPlot(l.id)));
+  if ("ResizeObserver" in window) {
+    const ro = new ResizeObserver(() => state.lanes.forEach((l) => drawPlot(l.id)));
+    document.querySelectorAll(".viz").forEach((v) => ro.observe(v));
+  }
 }
 
 // Replay of a recorded run (web/data/sample-run.json), clearly labelled: for screenshots and machines without builds.
@@ -66,7 +69,7 @@ async function replay(file) {
   box.hidden = false;
   box.classList.add("replay");
   const how = run.mode === "parallel" ? "side by side, each side on its own half of each core type" : "one after the other, each side on the whole machine";
-  box.textContent = `Replay of a run recorded on ${run.recorded} on ${run.machine}, ${how}. Every number below was measured in that run.`;
+  box.textContent = `Replay: every number above was measured on ${run.recorded} on ${run.machine}, ${how}.`;
   for (const lane of state.lanes) reset(lane.id);
   let i = 0;
   const step = () => {
@@ -75,6 +78,10 @@ async function replay(file) {
       if (ev.type !== "end") handle(ev);
     }
     state.replayTimer = i < run.events.length ? setTimeout(step, 16) : null;
+    if (!state.replayTimer) {
+      setStatus("Replay finished. Press R to measure live.");
+      document.querySelectorAll(".lane.active").forEach((l) => l.classList.remove("active"));
+    }
   };
   step();
 }
@@ -94,11 +101,10 @@ function showSetup(missing) {
 
 function toggle() { state.source ? stop() : start(); }
 
-function setStage(on) {
-  document.body.classList.toggle("stage", on);
-  $("#fit").setAttribute("aria-pressed", String(on));
-  try { localStorage.setItem("stage", on ? "1" : "0"); } catch {}
-  requestAnimationFrame(() => state.lanes.forEach((l) => drawPlot(l.id)));
+function setStatus(text, live = false) {
+  const el = $("#status");
+  el.textContent = text;
+  el.classList.toggle("live", live);
 }
 
 function stopReplay() {
@@ -123,6 +129,7 @@ async function start() {
   const go = $("#go");
   go.classList.add("running");
   $(".go-label", go).textContent = "Stop";
+  setStatus("Starting…", true);
   src.onmessage = (m) => handle(JSON.parse(m.data));
   src.onerror = () => stop();
 }
@@ -134,6 +141,7 @@ function stop() {
   const go = $("#go");
   go.classList.remove("running");
   $(".go-label", go).textContent = "Run the three races";
+  setStatus("Done. Press R to race again.");
   document.querySelectorAll(".chip.run").forEach((c) => { c.className = "chip"; c.textContent = "stopped"; });
   document.querySelectorAll(".lane.active").forEach((l) => l.classList.remove("active"));
 }
@@ -172,7 +180,8 @@ function handle(ev) {
   if (ev.type === "lane") {
     v.el.classList.toggle("active", ev.state === "running");
     if (ev.state === "running") {
-      if (state.source && !document.body.classList.contains("stage")) v.el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+      if (state.source && window.innerWidth < 1100) v.el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+      setStatus(`Racing: ${lane.title}`, true);
       for (const side of ["original", "record"]) {
         setChip(ev.lane, side, "run", lane.kind === "gas" ? "compiling" : "proving");
         if (lane.kind === "gas") $(`.gasbar[data-side="${side}"]`, v.el).classList.add("scan");
@@ -348,18 +357,17 @@ async function loadPeople() {
       img.alt = "";
       img.loading = "lazy";
       img.src = `https://avatars.githubusercontent.com/u/${Number(p.user_id)}?s=128`;
-      const name = document.createElement("span");
-      name.textContent = `@${p.login}`;
-      const n = document.createElement("span");
-      n.className = "n";
-      n.textContent = `${p.activity} contributions`;
-      a.append(img, name, n);
+      a.dataset.login = `@${p.login} · ${p.activity}`;
+      a.setAttribute("aria-label", `@${p.login}, ${p.activity} contributions`);
+      img.src = `https://avatars.githubusercontent.com/u/${Number(p.user_id)}?s=96`;
+      a.append(img);
       li.append(a);
       ul.append(li);
     }
-    $("#people-source").textContent = `Source: provably.fast public participation table (consented public activity), fetched ${data.fetched}. Avatars from GitHub.`;
+    $("#people-count").textContent = `${data.people.length} people, ${data.people.reduce((n, p) => n + p.activity, 0).toLocaleString("en-US")} contributions`;
+    $("#people-date").textContent = `fetched ${data.fetched}`;
   } catch {
-    $("#people-source").textContent = "Run scripts/fetch_contributors.py to list the contributors.";
+    $("#people-count").textContent = "run make contributors";
   }
 }
 

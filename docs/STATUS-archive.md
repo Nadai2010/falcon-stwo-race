@@ -1,5 +1,9 @@
 # STATUS archive (append-only, newest first)
 
+## 2026-10-19: One-screen layout
+- The fit-to-screen view is now the only layout: three cards side by side, run controls and contributors (colour avatar stack with names on hover) in a dock under the cards, a footnote on why numbers differ per machine and the non-affiliation disclaimer. Each card links to its provably.fast challenge; the header links to this repository.
+- Owner decision: phase 2 (simulated L1 blocks) is dropped; next is a simple mainnet comparison of the two Falcon accounts.
+
 ## 2026-10-19: Fit-to-screen view and Built-on logos
 - `F`, the header button or `/?stage`: the three lanes side by side on one 16:9 screen for recording (checked at 1920x1080 and 1440x900).
 - Header: "Built on" Stwo (StarkWare) and Starknet with their GitHub organisation logos, plus a non-affiliation disclaimer in the footer and the README.

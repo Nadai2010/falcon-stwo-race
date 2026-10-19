@@ -24,18 +24,36 @@
       "statement": "s2_statement",
       "original": {
         "label": "Stwo, pinned prover d6276445",
-        "prove": ["{fast_original_prove}", "{statement}"],
-        "verify": ["{fast_original_verify}", "{proof}", "{preimage}"]
+        "prove": [
+          "{fast_original_prove}",
+          "{statement}"
+        ],
+        "verify": [
+          "{fast_original_verify}",
+          "{proof}",
+          "{preimage}"
+        ]
       },
       "record": {
         "label": "Record 5eafa818 (frontier 7a1b6eae)",
-        "prove": ["{fast_record_prove}", "{statement}"],
-        "verify": ["{fast_original_verify}", "{proof}", "{preimage}"]
+        "prove": [
+          "{fast_record_prove}",
+          "{statement}"
+        ],
+        "verify": [
+          "{fast_original_verify}",
+          "{proof}",
+          "{preimage}"
+        ]
       },
       "official": {
         "text": "Board: the record proves in 0.4992 of the pinned prover's time, on the evaluator's 16-core AVX2 host.",
         "source": "https://stwo.provably.fast/",
         "date": "2026-10-18"
+      },
+      "challenge": {
+        "text": "Take the challenge",
+        "url": "https://stwo.provably.fast/"
       }
     },
     {
@@ -48,18 +66,36 @@
       "statement": "s1_statement",
       "original": {
         "label": "Stwo, unmodified (dd1787bc)",
-        "prove": ["{light_original_prove}", "{statement}"],
-        "verify": ["{light_original_verify}", "{proof}", "{preimage}"]
+        "prove": [
+          "{light_original_prove}",
+          "{statement}"
+        ],
+        "verify": [
+          "{light_original_verify}",
+          "{proof}",
+          "{preimage}"
+        ]
       },
       "record": {
         "label": "Lowest measured peak, job 7bb39eeb",
-        "prove": ["{light_record_prove}", "{statement}"],
-        "verify": ["{light_original_verify}", "{proof}", "{preimage}"]
+        "prove": [
+          "{light_record_prove}",
+          "{statement}"
+        ],
+        "verify": [
+          "{light_original_verify}",
+          "{proof}",
+          "{preimage}"
+        ]
       },
       "official": {
         "text": "Board: the first season cut peak memory from 13.9 GiB to 1.04 GiB.",
         "source": "https://stwo.provably.fast/",
         "date": "2026-10-12"
+      },
+      "challenge": {
+        "text": "See the season",
+        "url": "https://stwo.provably.fast/"
       }
     },
     {
@@ -82,6 +118,10 @@
         "text": "Board: 27,915,721 gas against 48,398,466 (1.73x cheaper), mean over 27 held-out signatures.",
         "source": "https://falcon.provably.fast/",
         "date": "2026-10-18"
+      },
+      "challenge": {
+        "text": "Take the challenge",
+        "url": "https://falcon.provably.fast/"
       }
     }
   ]
