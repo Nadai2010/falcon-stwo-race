@@ -43,6 +43,7 @@ async function init() {
     drawPlot(lane.id);
   });
   loadPeople();
+  mainnet({ lane: "falcon", state: "recorded" });
   const rp = new URLSearchParams(location.search).get("replay");
   if (rp !== null) replay(rp === "sequential" ? "sample-run-sequential.json" : "sample-run.json");
   $("#go").addEventListener("click", toggle);
@@ -79,6 +80,7 @@ async function replay(file) {
     }
     state.replayTimer = i < run.events.length ? setTimeout(step, 16) : null;
     if (!state.replayTimer) {
+      mainnet({ lane: "falcon", state: "recorded" });
       setStatus("Replay finished. Press R to measure live.");
       document.querySelectorAll(".lane.active").forEach((l) => l.classList.remove("active"));
     }
@@ -163,6 +165,7 @@ function reset(id) {
     $(`.gasbar[data-side="${side}"]`, v.el).classList.remove("scan");
     $(`.gasbar[data-side="${side}"] i`, v.el).style.width = "0";
     $(`.gasbar[data-side="${side}"] b`, v.el).textContent = "";
+
   }
   drawPlot(id);
 }
@@ -232,6 +235,10 @@ function handle(ev) {
     verdict(lane);
     return;
   }
+  if (ev.type === "mainnet") {
+    mainnet(ev);
+    return;
+  }
   if (ev.type === "gas") {
     v.done[ev.side] = { ...(v.done[ev.side] || {}), gas: ev.gas, ok: ev.ok };
     const s = sideEl(ev.lane, ev.side);
@@ -269,6 +276,36 @@ function verdict(lane) {
   $(".verdict-txt", box).textContent = text;
   box.hidden = false;
   box.classList.remove("pop"); void box.offsetWidth; box.classList.add("pop");
+}
+
+// Mainnet price of one Falcon-signed transaction per account: live simulation, or the recorded one.
+async function mainnet(ev) {
+  const box = $(".mainnet", state.view[ev.lane].el);
+  if (!box) return;
+  if (ev.state === "running") {
+    $(".mn-meta", box).textContent = "signing and simulating on mainnet…";
+    box.classList.add("busy");
+    return;
+  }
+  box.classList.remove("busy");
+  let data = ev.data, live = ev.state === "done";
+  if (!data) {
+    try { data = await (await fetch("data/mainnet-sim.json")).json(); } catch { return; }
+  }
+  let price = null;
+  try { price = await (await fetch("/api/price")).json(); } catch {}
+  const usd = price && price.usd;
+  for (const side of ["original", "record"]) {
+    const row = $(`.mn-row[data-side="${side}"]`, box);
+    const fee = data.sides[side].invoke.fee_strk;
+    $(".mn-strk", row).textContent = `${fee.toFixed(3)} STRK`;
+    $(".mn-usd", row).textContent = usd ? `$${(fee * usd).toFixed(3)}` : "";
+  }
+  const a = data.sides.original.invoke, b = data.sides.record.invoke;
+  const when = new Date(data.timestamp * 1000).toISOString().slice(0, 10);
+  $(".mn-meta", box).textContent = `${live ? "signed now" : "last simulation"} · block ${data.block.toLocaleString("en-US")}${live ? "" : ` · ${when}`}`;
+  $(".mn-ratio", box).textContent = `${(a.fee_strk / b.fee_strk).toFixed(2)}× cheaper`;
+  $(".mn-src", box).textContent = usd ? `USD via ${price.source}` : "USD unavailable";
 }
 
 function countUp(el, target) {

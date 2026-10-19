@@ -20,3 +20,25 @@ The proof worker and verifier entry points (`crates/privacy_prove/src/bin/privac
 ## Using existing builds
 
 Create `config.local.json` (ignored by git) with a `paths` object overriding any key of `races.json`'s `paths`; the dashboard lists missing paths at the top of the page.
+
+## Mainnet price
+
+The Falcon card prices one Falcon-signed transaction per account on Starknet mainnet by simulation (`server/mainnet_sim.mjs`); nothing is broadcast or paid. To run it live, add a `mainnet` object to `config.local.json`:
+
+```json
+"mainnet": {
+  "env": "/private/path/.env",
+  "rpc": "https://api.zan.top/public/starknet-mainnet/rpc/v0_10",
+  "cli": "/path/to/cairo-pq-verifiers/pq-accounts/cli",
+  "falcon_py": "/path/to/falcon.py",
+  "falcon_key": "/private/path/falcon-key.json",
+  "sides": { "original": "/path/to/oz-tree", "record": "/path/to/record-tree" }
+}
+```
+
+- `env` holds `PQ_RPC`, `PQ_FUNDER_ADDRESS` and `PQ_FUNDER_PRIVATE_KEY` of any funded mainnet account; it signs the simulated declares and is never sent anywhere else. Keep it outside the repository.
+- `rpc` must accept multi-megabyte requests: the record's account class is 3.1 MB, which Alchemy and publicnode refuse; ZAN's public endpoint accepts it.
+- `cli` is OpenZeppelin's `pq-accounts/cli` with `npm ci && npm run build` done; `sides` are the two verifier trees with `scarb build -p pq_accounts` done.
+- `falcon_key` can be any Falcon key (`falcon_signer.py keygen`): nothing is broadcast.
+
+Without this block the card shows `web/data/mainnet-sim.json`, the last recorded simulation.

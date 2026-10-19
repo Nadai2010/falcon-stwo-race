@@ -23,6 +23,7 @@ from typing import Callable, Iterator
 ROOT = Path(__file__).resolve().parent.parent
 POLL_S = 0.1
 VERIFY_TIMEOUT_S = 300
+MAINNET_TIMEOUT_S = 150
 GAS_RE = re.compile(r"\[PASS\][^\n]*bench_verify_falcon_512_shake \(.*?l2_gas: ~(\d+)")
 
 Emit = Callable[[dict], None]
@@ -38,7 +39,16 @@ def load_config() -> dict:
     local = ROOT / "config.local.json"
     paths = races["paths"] | (json.loads(local.read_text()).get("paths", {}) if local.exists() else {})
     races["paths"] = {k: str((ROOT / v).resolve()) if not os.path.isabs(v) else v for k, v in paths.items()}
+    races["mainnet"] = json.loads(local.read_text()).get("mainnet") if local.exists() else None
     return races
+
+
+def mainnet_ready(cfg: dict | None) -> bool:
+    """The live mainnet price needs node, the private .env, the CLI and both built account trees."""
+    if not cfg or not shutil.which("node"):
+        return False
+    paths = [cfg.get("env"), cfg.get("cli"), cfg.get("falcon_py"), cfg.get("falcon_key"), *cfg.get("sides", {}).values()]
+    return all(p and Path(p).exists() for p in paths)
 
 
 def expand(template: list[str], paths: dict, extra: dict | None = None) -> list[str]:
@@ -277,6 +287,33 @@ class Race:
             m = GAS_RE.search(s.output)
             self.emit({"type": "gas", "lane": lane["id"], "side": s.side, "gas": int(m.group(1)) if m else None,
                        "ok": bool(m) and s.returncode == 0})
+        self._mainnet_price(lane)
+
+    def _mainnet_price(self, lane: dict) -> None:
+        """Price one Falcon-signed transaction of each account on mainnet, by simulation (nothing is sent).
+        Without a local mainnet setup the page shows the recorded simulation, labelled as such."""
+        cfg = self.config.get("mainnet")
+        if self.cancelled.is_set():
+            return
+        if not mainnet_ready(cfg):
+            self.emit({"type": "mainnet", "lane": lane["id"], "state": "recorded"})
+            return
+        self.emit({"type": "mainnet", "lane": lane["id"], "state": "running"})
+        cfg_path = self.workdir / "mainnet.json"
+        cfg_path.write_text(json.dumps(cfg))
+        sim = Side(lane["id"], "mainnet", ["node", str(ROOT / "server" / "mainnet_sim.mjs"), str(cfg_path)])
+        self._spawn(sim)
+        try:
+            sim.proc.wait(timeout=MAINNET_TIMEOUT_S)
+        except subprocess.TimeoutExpired:
+            _kill(sim.proc)
+        with _LIVE_LOCK:
+            _LIVE.discard(sim.proc)
+        try:
+            data = json.loads(sim.stdout_path.read_text().strip().splitlines()[-1])
+            self.emit({"type": "mainnet", "lane": lane["id"], "state": "done", "data": data})
+        except (ValueError, IndexError):
+            self.emit({"type": "mainnet", "lane": lane["id"], "state": "recorded", "note": "live pricing failed"})
 
     def run(self, lane_ids: list[str]) -> None:
         lanes = {l["id"]: l for l in self.config["lanes"]}
