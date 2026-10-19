@@ -7,6 +7,10 @@ A full Stwo proof at 100 provable bits, a proof in about a gigabyte of memory, a
 
 ![Dashboard: three live races, original against record](docs/assets/dashboard.png)
 
+<sub>Recording view (`F`): everything on one screen.</sub>
+
+![Fit-to-screen view at 1920x1080](docs/assets/stage-1080p.png)
+
 </div>
 
 ## Why
@@ -28,6 +32,10 @@ Both runs were recorded on an Intel Core Ultra 9 275HX (8 performance + 16 effic
 - Fast: the record proves in 0.4992 of the pinned prover's time on a 16-core AVX2 host ([stwo.provably.fast](https://stwo.provably.fast/)).
 - Light: the first season cut peak memory from 13.9 GiB to 1.04 GiB ([stwo.provably.fast](https://stwo.provably.fast/)).
 - Falcon: 27,915,721 gas against 48,398,466, mean over 27 held-out signatures ([falcon.provably.fast](https://falcon.provably.fast/)).
+
+To record a video, press `F` (or "Fit to screen", or open `/?stage`): the three lanes sit side by side on one 16:9 screen, no scrolling.
+
+A single race is one pair, so its ratio moves a few percent from run to run (thermal state, background load, how the scheduler places threads on performance and efficiency cores); on the sample machine the fast lane gave 2.47x to 2.64x side by side. The board's figures come from at least twelve pairs with a confidence interval.
 
 Your numbers will differ: they depend on your CPU. "Side by side" pins each build to its own half of every core type (performance and efficiency cores are split evenly); "one after the other" gives each build the whole machine.
 
@@ -66,6 +74,10 @@ Upstream work raced here: [Stwo](https://github.com/starkware-libs/stwo) and the
 ## Status
 
 Phase 1 (the three live races) is done. Next steps and open decisions are in [docs/STATUS.md](docs/STATUS.md).
+
+## Disclaimer
+
+An independent community demo. It is not affiliated with, or endorsed by, StarkWare, the Starknet Foundation or OpenZeppelin; their names and logos belong to them and only say what the races run on.
 
 ## License
 
