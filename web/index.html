@@ -28,6 +28,7 @@
       </div>
     </header>
 
+    <main class="stage">
     <section class="hero">
       <div class="hero-title">
         <p class="eyebrow">Live · measured on this machine · nothing pre-recorded</p>
@@ -39,7 +40,7 @@
     <section id="lanes" class="lanes" aria-live="polite"></section>
 
     <section class="dock">
-      <div class="dock-run">
+      <div class="dock-card dock-run">
         <button id="go" class="go" type="button">
           <span class="go-ring" aria-hidden="true"></span>
           <span class="go-label">Run the three races</span>
@@ -50,7 +51,7 @@
         </div>
         <p class="status" id="status">Ready. Press <kbd>R</kbd> to start, <kbd>Esc</kbd> to stop.</p>
       </div>
-      <div class="dock-people">
+      <div class="dock-card dock-people">
         <p class="people-head"><span>Contributors</span><small id="people-count"></small></p>
         <ul id="people" class="people"></ul>
       </div>
@@ -61,6 +62,7 @@
       <p><b>Your numbers will differ:</b> time depends on the CPU, its cores, temperature and load, and one race is one pair. Memory varies less, gas not at all. Small print on each card is the evaluator's figure.</p>
       <p>Independent community demo, not affiliated with StarkWare, the Starknet Foundation or OpenZeppelin. Contributors: provably.fast public table, <span id="people-date"></span>.</p>
     </footer>
+    </main>
   </div>
 
   <template id="lane-tpl">
