@@ -128,7 +128,8 @@ async function start() {
   state.source = src;
   const go = $("#go");
   go.classList.add("running");
-  $(".go-label", go).textContent = "Stop";
+  $(".go-run", go).setAttribute("aria-hidden", "true");
+  $(".go-stop", go).removeAttribute("aria-hidden");
   setStatus("Starting…", true);
   src.onmessage = (m) => handle(JSON.parse(m.data));
   src.onerror = () => stop();
@@ -140,7 +141,8 @@ function stop() {
   state.source = null;
   const go = $("#go");
   go.classList.remove("running");
-  $(".go-label", go).textContent = "Run the three races";
+  $(".go-stop", go).setAttribute("aria-hidden", "true");
+  $(".go-run", go).removeAttribute("aria-hidden");
   setStatus("Done. Press R to race again.");
   document.querySelectorAll(".chip.run").forEach((c) => { c.className = "chip"; c.textContent = "stopped"; });
   document.querySelectorAll(".lane.active").forEach((l) => l.classList.remove("active"));
@@ -226,7 +228,7 @@ function handle(ev) {
   if (ev.type === "verified") {
     v.done[ev.side].verified = ev.ok;
     v.done[ev.side].bytes = ev.bytes;
-    setChip(ev.lane, ev.side, ev.ok ? "ok" : "bad", ev.ok ? "verified ✓" : "rejected");
+    setChip(ev.lane, ev.side, ev.ok ? "ok" : "bad", ev.ok ? "verified" : "rejected");
     verdict(lane);
     return;
   }
@@ -237,7 +239,7 @@ function handle(ev) {
     if (!ev.ok || ev.gas == null) { setChip(ev.lane, ev.side, "bad", "failed"); return; }
     countUp($(".r-main", s), ev.gas);
     $(".r-sub", s).textContent = "Sierra gas";
-    setChip(ev.lane, ev.side, "ok", "valid ✓");
+    setChip(ev.lane, ev.side, "ok", "valid");
     const max = Math.max(...["original", "record"].map((k) => v.done[k]?.gas || 0));
     for (const k of ["original", "record"]) {
       const g = v.done[k]?.gas;
