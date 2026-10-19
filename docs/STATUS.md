@@ -24,7 +24,7 @@ Rule: when an item is DONE it leaves this table and is appended to `docs/STATUS-
 | 1 | Decide repository visibility and license | 🔴 owner | Private for now; MIT proposed in LICENSE (patches follow upstream licenses). |
 | 2 | Public source for the evaluator's proof-worker entry points | 🔴 | `privacy_prove_stdout.rs`, `privacy_verify.rs` and season 1's default `pvfast_workload.rs` are not in the public fork; `make setup` needs `HARNESS_DIR`. Ask the maintainers whether they can be published, or document how participants obtain them. |
 | 3 | Pending Falcon records | 🟡 waiting | Two cheaper Falcon trees are ready (local 9-block fixture 27,748,819 and 27,493,491 gas); swap `falcon_record_repo` and the patch once one becomes the official record. |
-| 4 | Phase 2: quantum-safe L1 simulation | 🔴 idea | Blocks of Falcon-signed private payments proved by both provers; decide scope (maybe simpler) before building. See `docs/STATUS-archive.md` 2026-10-19 for the agreed flow. |
+| 4 | Mainnet: OpenZeppelin Falcon account vs record account | 🟡 | Deploy both on Starknet mainnet, send one transaction from each, compare the real fees by transaction hash. Owner's funded account; keys never enter this repo. |
 | 5 | Show build identity on each side | 🔴 | `/api/config` could report a sha256 / `git describe` per binary and tree so the labels in `races.json` are checked, not trusted (senior review, 2026-10-19). |
 | 6 | One-button "submit the improvements" | 🔴 idea | Owner idea: a button that also pushes pending improvements; needs a design that never submits without an explicit confirmation. |
 

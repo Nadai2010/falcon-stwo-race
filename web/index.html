@@ -14,78 +14,86 @@
   <div class="lattice" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
 
-  <header class="top">
-    <div class="brand"><span class="dot"></span> falcon-stwo-race</div>
-    <div class="top-right">
-      <button id="fit" class="fit" type="button" aria-pressed="false" title="Fit everything on one screen (F)">Fit to screen</button>
+  <div class="app">
+    <header class="top">
+      <a class="brand" href="https://github.com/Nadai2010/falcon-stwo-race" target="_blank" rel="noopener">
+        <span class="dot"></span> falcon-stwo-race
+        <svg class="gh" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        <span class="gh-label">Source on GitHub</span>
+      </a>
       <div class="built" aria-label="Built on">
         <span>Built on</span>
         <a href="https://github.com/starkware-libs/stwo" target="_blank" rel="noopener"><img src="assets/starkware-libs.png" alt="">Stwo</a>
         <a href="https://www.starknet.io/" target="_blank" rel="noopener"><img src="assets/starknet-io.png" alt="">Starknet</a>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <main>
     <section class="hero">
-      <p class="eyebrow reveal" style="--d:0">Live · measured on this machine · nothing pre-recorded</p>
-      <h1 class="reveal" style="--d:1">Quantum-safe, <br><em>and fast.</em></h1>
-      <p class="lede reveal" style="--d:2">STARK proofs are hash-based and already post-quantum. Signatures were the weak point. Three races, original against record, in the same configuration: a full proof at 100 provable bits, a proof in about a gigabyte of memory, and a Falcon-512 signature checked by a Starknet account.</p>
-      <div class="controls reveal" style="--d:3">
-        <button id="go" class="go" type="button" aria-describedby="go-hint">
+      <div class="hero-title">
+        <p class="eyebrow">Live · measured on this machine · nothing pre-recorded</p>
+        <h1>Quantum-safe, <em>and fast.</em></h1>
+      </div>
+      <p class="lede">STARK proofs are hash-based and already post-quantum; signatures were the weak point. Three races, original against record, in the same configuration, on the machine in front of you.</p>
+    </section>
+
+    <section id="lanes" class="lanes" aria-live="polite"></section>
+
+    <section class="dock">
+      <div class="dock-run">
+        <button id="go" class="go" type="button">
           <span class="go-ring" aria-hidden="true"></span>
           <span class="go-label">Run the three races</span>
         </button>
         <div class="mode" role="radiogroup" aria-label="How the two sides share the machine">
           <label><input type="radio" name="mode" value="parallel" checked> <span>Side by side</span><small>each on half the cores</small></label>
-          <label><input type="radio" name="mode" value="sequential"> <span>One after the other</span><small>each on the full machine</small></label>
+          <label><input type="radio" name="mode" value="sequential"> <span>One after the other</span><small>each on the whole machine</small></label>
         </div>
-        <p id="go-hint" class="hint">Press <kbd>R</kbd> to start, <kbd>Esc</kbd> to stop, <kbd>F</kbd> to fit the screen.</p>
+        <p class="status" id="status">Ready. Press <kbd>R</kbd> to start, <kbd>Esc</kbd> to stop.</p>
       </div>
-      <div id="setup" class="setup" hidden></div>
+      <div class="dock-people">
+        <p class="people-head"><span>Contributors</span><small id="people-count"></small></p>
+        <ul id="people" class="people"></ul>
+      </div>
     </section>
 
-    <section id="lanes" class="lanes" aria-live="polite"></section>
-
-    <section class="credits">
-      <div class="credits-head">
-        <p class="eyebrow">Built together</p>
-        <h2>Every record stands on earlier work.</h2>
-        <p class="lede small">These are the people whose public activity on provably.fast fed the records raced above: leads, builds, reproductions, negative results and reviews. The trees include all of it; "record" means the community's best, not one person's.</p>
-      </div>
-      <ul id="people" class="people"></ul>
-      <p class="source" id="people-source"></p>
-    </section>
-  </main>
-
-  <footer class="foot">
-    <p class="disclaimer">An independent community demo. Not affiliated with, or endorsed by, StarkWare, the Starknet Foundation or OpenZeppelin; their names and logos belong to them and only say what the races run on.</p>
-    <p>Original and record always run the same statement, security parameters and thread budget. Proofs are checked by the season's verifier; gas is Sierra gas reported by Starknet Foundry. Official figures are labelled with their source and date.</p>
-  </footer>
+    <footer class="foot">
+      <p id="setup" class="setup" hidden></p>
+      <p><b>Your numbers will differ.</b> Time depends on the CPU, its cores, its temperature and what else runs; one race is one pair, so a ratio moves a few percent between runs. Memory moves less, gas not at all. Each card's small print is the evaluator's figure, from many pairs on its own host.</p>
+      <p>Independent community demo, not affiliated with or endorsed by StarkWare, the Starknet Foundation or OpenZeppelin. Contributors from provably.fast's public participation table, <span id="people-date"></span>.</p>
+    </footer>
+  </div>
 
   <template id="lane-tpl">
     <article class="lane">
       <div class="lane-info">
-        <p class="kicker"></p>
-        <h3 class="lane-title"></h3>
-        <p class="lane-sub"></p>
+        <div class="lane-text">
+          <div class="kicker-row"><p class="kicker"></p><a class="challenge" target="_blank" rel="noopener"><span></span> <i aria-hidden="true">→</i></a></div>
+          <h3 class="lane-title"></h3>
+          <p class="lane-sub"></p>
+        </div>
         <div class="verdict" hidden><span class="verdict-num"></span><span class="verdict-txt"></span></div>
         <p class="official"></p>
       </div>
       <div class="lane-race">
-        <div class="side" data-side="original">
-          <div class="side-head"><span class="swatch"></span><span class="side-label"></span><span class="chip"></span></div>
-          <div class="readouts"><span class="r-main">—</span><span class="r-sub"></span></div>
+        <div class="sides">
+          <div class="side" data-side="original">
+            <div class="side-head"><span class="swatch"></span><span class="chip"></span></div>
+            <span class="side-label"></span>
+            <div class="readouts"><span class="r-main">—</span><span class="r-sub"></span></div>
+          </div>
+          <div class="side" data-side="record">
+            <div class="side-head"><span class="swatch"></span><span class="chip"></span></div>
+            <span class="side-label"></span>
+            <div class="readouts"><span class="r-main">—</span><span class="r-sub"></span></div>
+          </div>
         </div>
-        <div class="side" data-side="record">
-          <div class="side-head"><span class="swatch"></span><span class="side-label"></span><span class="chip"></span></div>
-          <div class="readouts"><span class="r-main">—</span><span class="r-sub"></span></div>
-        </div>
-        <canvas class="plot" height="190"></canvas>
-        <div class="gasbars" hidden>
-          <div class="gasbar" data-side="original"><i></i><b></b></div>
-          <div class="gasbar" data-side="record"><i></i><b></b></div>
-          <div class="gasscale"><span>0</span><span>Sierra gas per verification, same input on both sides</span></div>
+        <div class="viz">
+          <canvas class="plot"></canvas>
+          <div class="gasbars" hidden>
+            <div class="gasbar" data-side="original"><i></i><b></b></div>
+            <div class="gasbar" data-side="record"><i></i><b></b></div>
+            <div class="gasscale"><span>0</span><span>Sierra gas per verification, same input on both sides</span></div>
+          </div>
         </div>
       </div>
     </article>

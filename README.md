@@ -5,11 +5,7 @@
 **Original against record, measured live on your machine.**
 A full Stwo proof at 100 provable bits, a proof in about a gigabyte of memory, and a Falcon-512 signature checked by a Starknet account. One button runs all three.
 
-![Dashboard: three live races, original against record](docs/assets/dashboard.png)
-
-<sub>Recording view (`F`): everything on one screen.</sub>
-
-![Fit-to-screen view at 1920x1080](docs/assets/stage-1080p.png)
+![Dashboard: three live races, original against record, on one screen](docs/assets/dashboard.png)
 
 </div>
 
@@ -33,7 +29,7 @@ Both runs were recorded on an Intel Core Ultra 9 275HX (8 performance + 16 effic
 - Light: the first season cut peak memory from 13.9 GiB to 1.04 GiB ([stwo.provably.fast](https://stwo.provably.fast/)).
 - Falcon: 27,915,721 gas against 48,398,466, mean over 27 held-out signatures ([falcon.provably.fast](https://falcon.provably.fast/)).
 
-To record a video, press `F` (or "Fit to screen", or open `/?stage`): the three lanes sit side by side on one 16:9 screen, no scrolling.
+Everything fits on one 16:9 screen (checked at 1920x1080 and 1440x900), so a screen recording needs no scrolling. Each card links to its challenge on provably.fast.
 
 A single race is one pair, so its ratio moves a few percent from run to run (thermal state, background load, how the scheduler places threads on performance and efficiency cores); on the sample machine the fast lane gave 2.47x to 2.64x side by side. The board's figures come from at least twelve pairs with a confidence interval.
 

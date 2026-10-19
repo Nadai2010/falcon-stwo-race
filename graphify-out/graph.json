@@ -65,7 +65,7 @@
       "file_type": "code",
       "norm_label": "countup()",
       "source_file": "web/app.js",
-      "source_location": "L263"
+      "source_location": "L272"
     },
     {
       "id": "web_app_css",
@@ -89,7 +89,7 @@
       "file_type": "code",
       "norm_label": "drawplot()",
       "source_file": "web/app.js",
-      "source_location": "L280"
+      "source_location": "L289"
     },
     {
       "id": "web_app_handle",
@@ -101,7 +101,7 @@
       "file_type": "code",
       "norm_label": "handle()",
       "source_file": "web/app.js",
-      "source_location": "L167"
+      "source_location": "L175"
     },
     {
       "id": "web_app_init",
@@ -125,7 +125,7 @@
       "file_type": "code",
       "norm_label": "loadpeople()",
       "source_file": "web/app.js",
-      "source_location": "L337"
+      "source_location": "L346"
     },
     {
       "id": "web_app_nicestep",
@@ -137,7 +137,7 @@
       "file_type": "code",
       "norm_label": "nicestep()",
       "source_file": "web/app.js",
-      "source_location": "L331"
+      "source_location": "L340"
     },
     {
       "id": "web_app_notice",
@@ -149,7 +149,7 @@
       "file_type": "code",
       "norm_label": "notice()",
       "source_file": "web/app.js",
-      "source_location": "L82"
+      "source_location": "L89"
     },
     {
       "id": "web_app_replay",
@@ -161,7 +161,7 @@
       "file_type": "code",
       "norm_label": "replay()",
       "source_file": "web/app.js",
-      "source_location": "L61"
+      "source_location": "L64"
     },
     {
       "id": "web_app_reset",
@@ -173,7 +173,7 @@
       "file_type": "code",
       "norm_label": "reset()",
       "source_file": "web/app.js",
-      "source_location": "L141"
+      "source_location": "L149"
     },
     {
       "id": "web_app_schedule",
@@ -185,7 +185,7 @@
       "file_type": "code",
       "norm_label": "schedule()",
       "source_file": "web/app.js",
-      "source_location": "L274"
+      "source_location": "L283"
     },
     {
       "id": "web_app_setchip",
@@ -197,19 +197,19 @@
       "file_type": "code",
       "norm_label": "setchip()",
       "source_file": "web/app.js",
-      "source_location": "L161"
+      "source_location": "L169"
     },
     {
-      "id": "web_app_setstage",
-      "label": "setStage()",
+      "id": "web_app_setstatus",
+      "label": "setStatus()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "app.js",
       "file_type": "code",
-      "norm_label": "setstage()",
+      "norm_label": "setstatus()",
       "source_file": "web/app.js",
-      "source_location": "L97"
+      "source_location": "L104"
     },
     {
       "id": "web_app_showsetup",
@@ -221,7 +221,7 @@
       "file_type": "code",
       "norm_label": "showsetup()",
       "source_file": "web/app.js",
-      "source_location": "L89"
+      "source_location": "L96"
     },
     {
       "id": "web_app_sideel",
@@ -233,7 +233,7 @@
       "file_type": "code",
       "norm_label": "sideel()",
       "source_file": "web/app.js",
-      "source_location": "L160"
+      "source_location": "L168"
     },
     {
       "id": "web_app_start",
@@ -245,7 +245,7 @@
       "file_type": "code",
       "norm_label": "start()",
       "source_file": "web/app.js",
-      "source_location": "L112"
+      "source_location": "L118"
     },
     {
       "id": "web_app_stop",
@@ -257,7 +257,7 @@
       "file_type": "code",
       "norm_label": "stop()",
       "source_file": "web/app.js",
-      "source_location": "L130"
+      "source_location": "L137"
     },
     {
       "id": "web_app_stopreplay",
@@ -269,7 +269,7 @@
       "file_type": "code",
       "norm_label": "stopreplay()",
       "source_file": "web/app.js",
-      "source_location": "L104"
+      "source_location": "L110"
     },
     {
       "id": "web_app_toggle",
@@ -281,7 +281,7 @@
       "file_type": "code",
       "norm_label": "toggle()",
       "source_file": "web/app.js",
-      "source_location": "L95"
+      "source_location": "L102"
     },
     {
       "id": "web_app_verdict",
@@ -293,7 +293,7 @@
       "file_type": "code",
       "norm_label": "verdict()",
       "source_file": "web/app.js",
-      "source_location": "L243"
+      "source_location": "L252"
     },
     {
       "id": "scripts_fetch_contributors_activity",
@@ -648,7 +648,7 @@
       "label": "architecture.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "architecture.md",
@@ -660,7 +660,7 @@
       "label": "Architecture",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "architecture",
@@ -672,7 +672,7 @@
       "label": "Events",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "events",
@@ -684,7 +684,7 @@
       "label": "Process handling",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "process handling",
@@ -696,7 +696,7 @@
       "label": "Replay",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "replay",
@@ -708,7 +708,7 @@
       "label": "benchmarks.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "benchmarks.md",
@@ -720,7 +720,7 @@
       "label": "Benchmarks: what each number means",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "benchmarks: what each number means",
@@ -732,7 +732,7 @@
       "label": "Falcon-512",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "falcon-512",
@@ -744,7 +744,7 @@
       "label": "Fast prover (season 2)",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "fast prover (season 2)",
@@ -756,7 +756,7 @@
       "label": "Honesty rules",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "honesty rules",
@@ -768,7 +768,7 @@
       "label": "Light prover (season 1)",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "light prover (season 1)",
@@ -780,7 +780,7 @@
       "label": "setup.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "setup.md",
@@ -792,7 +792,7 @@
       "label": "HARNESS_DIR",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "harness_dir",
@@ -804,7 +804,7 @@
       "label": "Setup",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "setup",
@@ -816,7 +816,7 @@
       "label": "Using existing builds",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "using existing builds",
@@ -828,7 +828,7 @@
       "label": "STATUS.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "status.md",
@@ -840,7 +840,7 @@
       "label": "OPEN",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "open",
@@ -852,7 +852,7 @@
       "label": "Project index: read this before doing anything",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "project index: read this before doing anything",
@@ -864,7 +864,7 @@
       "label": "STATUS (single source of truth)",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "status (single source of truth)",
@@ -876,7 +876,7 @@
       "label": "Traps",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "traps",
@@ -888,120 +888,12 @@
       "label": "README.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "falcon-stwo-race",
+      "community_name": "Benchmarks: what each number means",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "readme.md",
       "source_file": "README.md",
       "source_location": "L1"
-    },
-    {
-      "id": "readme_built_together",
-      "label": "Built together",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "built together",
-      "source_file": "README.md",
-      "source_location": "L68"
-    },
-    {
-      "id": "readme_disclaimer",
-      "label": "Disclaimer",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "disclaimer",
-      "source_file": "README.md",
-      "source_location": "L78"
-    },
-    {
-      "id": "readme_falcon_stwo_race",
-      "label": "falcon-stwo-race",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "falcon-stwo-race",
-      "source_file": "README.md",
-      "source_location": "L3"
-    },
-    {
-      "id": "readme_how_it_works",
-      "label": "How it works",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "how it works",
-      "source_file": "README.md",
-      "source_location": "L52"
-    },
-    {
-      "id": "readme_license",
-      "label": "License",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "license",
-      "source_file": "README.md",
-      "source_location": "L82"
-    },
-    {
-      "id": "readme_run_it",
-      "label": "Run it",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "run it",
-      "source_file": "README.md",
-      "source_location": "L42"
-    },
-    {
-      "id": "readme_status",
-      "label": "Status",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "status",
-      "source_file": "README.md",
-      "source_location": "L74"
-    },
-    {
-      "id": "readme_the_three_races",
-      "label": "The three races",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "the three races",
-      "source_file": "README.md",
-      "source_location": "L22"
-    },
-    {
-      "id": "readme_why",
-      "label": "Why",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "why",
-      "source_file": "README.md",
-      "source_location": "L16"
     },
     {
       "id": "web_app",
@@ -1034,7 +926,7 @@
       "file_type": "code",
       "norm_label": "pending",
       "source_file": "web/app.js",
-      "source_location": "L273"
+      "source_location": "L282"
     },
     {
       "id": "web_app_state",
@@ -1069,6 +961,18 @@
       "node_kind": "heading",
       "norm_label": "2026-10-19: fit-to-screen view and built-on logos",
       "source_file": "docs/STATUS-archive.md",
+      "source_location": "L7"
+    },
+    {
+      "id": "docs_status_archive_2026_10_19_one_screen_layout",
+      "label": "2026-10-19: One-screen layout",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "STATUS archive (append-only, newest first)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "2026-10-19: one-screen layout",
+      "source_file": "docs/STATUS-archive.md",
       "source_location": "L3"
     },
     {
@@ -1081,7 +985,7 @@
       "node_kind": "heading",
       "norm_label": "2026-10-19: phase 1 done",
       "source_file": "docs/STATUS-archive.md",
-      "source_location": "L8"
+      "source_location": "L12"
     },
     {
       "id": "docs_status_archive_status_archive_append_only_newest_first",
@@ -1385,6 +1289,114 @@
       "norm_label": "two equal halves of the usable cpus. on hybrid cpus (performance + efficiency...",
       "source_file": "server/race.py",
       "source_location": "L71"
+    },
+    {
+      "id": "readme_built_together",
+      "label": "Built together",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "built together",
+      "source_file": "README.md",
+      "source_location": "L64"
+    },
+    {
+      "id": "readme_disclaimer",
+      "label": "Disclaimer",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "disclaimer",
+      "source_file": "README.md",
+      "source_location": "L74"
+    },
+    {
+      "id": "readme_falcon_stwo_race",
+      "label": "falcon-stwo-race",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "falcon-stwo-race",
+      "source_file": "README.md",
+      "source_location": "L3"
+    },
+    {
+      "id": "readme_how_it_works",
+      "label": "How it works",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "how it works",
+      "source_file": "README.md",
+      "source_location": "L48"
+    },
+    {
+      "id": "readme_license",
+      "label": "License",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "license",
+      "source_file": "README.md",
+      "source_location": "L78"
+    },
+    {
+      "id": "readme_run_it",
+      "label": "Run it",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "run it",
+      "source_file": "README.md",
+      "source_location": "L38"
+    },
+    {
+      "id": "readme_status",
+      "label": "Status",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "status",
+      "source_file": "README.md",
+      "source_location": "L70"
+    },
+    {
+      "id": "readme_the_three_races",
+      "label": "The three races",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "the three races",
+      "source_file": "README.md",
+      "source_location": "L18"
+    },
+    {
+      "id": "readme_why",
+      "label": "Why",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "why",
+      "source_file": "README.md",
+      "source_location": "L12"
     },
     {
       "id": "emit",
@@ -2492,7 +2504,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L294",
+      "source_location": "L303",
       "weight": 1.0
     },
     {
@@ -2504,7 +2516,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L298",
+      "source_location": "L307",
       "weight": 1.0
     },
     {
@@ -2516,7 +2528,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L168",
+      "source_location": "L176",
       "weight": 1.0
     },
     {
@@ -2528,24 +2540,12 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L173",
+      "source_location": "L181",
       "weight": 1.0
     },
     {
       "source": "web_app_handle",
-      "target": "web_app_setchip",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "web/app.js",
-      "source_location": "L177",
-      "weight": 1.0
-    },
-    {
-      "source": "web_app_handle",
-      "target": "web_app_sideel",
+      "target": "web_app_setstatus",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -2557,6 +2557,30 @@
     },
     {
       "source": "web_app_handle",
+      "target": "web_app_setchip",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "web/app.js",
+      "source_location": "L186",
+      "weight": 1.0
+    },
+    {
+      "source": "web_app_handle",
+      "target": "web_app_sideel",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "web/app.js",
+      "source_location": "L193",
+      "weight": 1.0
+    },
+    {
+      "source": "web_app_handle",
       "target": "web_app_schedule",
       "relation": "calls",
       "_origin": "ast",
@@ -2564,7 +2588,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L202",
+      "source_location": "L211",
       "weight": 1.0
     },
     {
@@ -2576,7 +2600,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L221",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -2588,7 +2612,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L229",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -2612,7 +2636,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L40",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -2624,7 +2648,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L42",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -2636,19 +2660,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L44",
-      "weight": 1.0
-    },
-    {
-      "source": "web_app_init",
-      "target": "web_app_setstage",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "web/app.js",
-      "source_location": "L46",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -2684,7 +2696,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L70",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -2696,7 +2708,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L75",
+      "source_location": "L78",
+      "weight": 1.0
+    },
+    {
+      "source": "web_app_replay",
+      "target": "web_app_setstatus",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "web/app.js",
+      "source_location": "L82",
       "weight": 1.0
     },
     {
@@ -2708,7 +2732,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L149",
+      "source_location": "L157",
       "weight": 1.0
     },
     {
@@ -2720,7 +2744,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L152",
+      "source_location": "L160",
       "weight": 1.0
     },
     {
@@ -2732,7 +2756,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L157",
+      "source_location": "L165",
       "weight": 1.0
     },
     {
@@ -2744,7 +2768,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L277",
+      "source_location": "L286",
       "weight": 1.0
     },
     {
@@ -2756,23 +2780,11 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L162",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
-      "source": "web_app_setstage",
-      "target": "web_app_drawplot",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "web/app.js",
-      "source_location": "L101",
-      "weight": 1.0
-    },
-    {
-      "source": "web_app_setstage",
+      "source": "web_app_setstatus",
       "target": "web_app_toggle",
       "relation": "calls",
       "_origin": "ast",
@@ -2780,7 +2792,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L98",
+      "source_location": "L107",
       "weight": 1.0
     },
     {
@@ -2792,7 +2804,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L114",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -2804,7 +2816,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L117",
+      "source_location": "L123",
       "weight": 1.0
     },
     {
@@ -2816,7 +2828,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L119",
+      "source_location": "L125",
+      "weight": 1.0
+    },
+    {
+      "source": "web_app_start",
+      "target": "web_app_setstatus",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "web/app.js",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -2828,7 +2852,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L126",
+      "source_location": "L133",
       "weight": 1.0
     },
     {
@@ -2840,7 +2864,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L127",
+      "source_location": "L134",
+      "weight": 1.0
+    },
+    {
+      "source": "web_app_stop",
+      "target": "web_app_setstatus",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "web/app.js",
+      "source_location": "L144",
       "weight": 1.0
     },
     {
@@ -2852,7 +2888,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L95",
+      "source_location": "L102",
       "weight": 1.0
     },
     {
@@ -2864,7 +2900,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L95",
+      "source_location": "L102",
       "weight": 1.0
     },
     {
@@ -3574,7 +3610,18 @@
     },
     {
       "source": "docs_status_archive_status_archive_append_only_newest_first",
-      "target": "docs_status_archive_2026_10_19_fit_to_screen_view_and_built_on_logos",
+      "target": "docs_status_archive_2026_10_19_phase_1_done",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/STATUS-archive.md",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_status_archive_status_archive_append_only_newest_first",
+      "target": "docs_status_archive_2026_10_19_one_screen_layout",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -3585,13 +3632,13 @@
     },
     {
       "source": "docs_status_archive_status_archive_append_only_newest_first",
-      "target": "docs_status_archive_2026_10_19_phase_1_done",
+      "target": "docs_status_archive_2026_10_19_fit_to_screen_view_and_built_on_logos",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/STATUS-archive.md",
-      "source_location": "L8",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -3646,7 +3693,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L16",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -3657,7 +3704,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L22",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -3668,7 +3715,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L42",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -3679,7 +3726,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L52",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -3690,7 +3737,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L68",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -3701,7 +3748,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L74",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -3712,7 +3759,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L78",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -3723,7 +3770,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L82",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
@@ -3904,7 +3951,18 @@
     },
     {
       "source": "web_app",
-      "target": "web_app_stopreplay",
+      "target": "web_app_toggle",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "web/app.js",
+      "source_location": "L102",
+      "weight": 1.0
+    },
+    {
+      "source": "web_app",
+      "target": "web_app_setstatus",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -3915,13 +3973,24 @@
     },
     {
       "source": "web_app",
+      "target": "web_app_stopreplay",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "web/app.js",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "web_app",
       "target": "web_app_start",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L112",
+      "source_location": "L118",
       "weight": 1.0
     },
     {
@@ -3932,7 +4001,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L130",
+      "source_location": "L137",
       "weight": 1.0
     },
     {
@@ -3943,7 +4012,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L141",
+      "source_location": "L149",
       "weight": 1.0
     },
     {
@@ -3965,7 +4034,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L160",
+      "source_location": "L168",
       "weight": 1.0
     },
     {
@@ -3976,7 +4045,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L161",
+      "source_location": "L169",
       "weight": 1.0
     },
     {
@@ -3987,7 +4056,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L167",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
@@ -3998,7 +4067,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L243",
+      "source_location": "L252",
       "weight": 1.0
     },
     {
@@ -4009,7 +4078,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L263",
+      "source_location": "L272",
       "weight": 1.0
     },
     {
@@ -4020,7 +4089,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L273",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -4031,7 +4100,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L274",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -4042,7 +4111,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L280",
+      "source_location": "L289",
       "weight": 1.0
     },
     {
@@ -4053,7 +4122,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L331",
+      "source_location": "L340",
       "weight": 1.0
     },
     {
@@ -4064,7 +4133,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L337",
+      "source_location": "L346",
       "weight": 1.0
     },
     {
@@ -4097,7 +4166,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L61",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -4119,7 +4188,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L82",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -4130,29 +4199,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L89",
-      "weight": 1.0
-    },
-    {
-      "source": "web_app",
-      "target": "web_app_toggle",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "web/app.js",
-      "source_location": "L95",
-      "weight": 1.0
-    },
-    {
-      "source": "web_app",
-      "target": "web_app_setstage",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "web/app.js",
-      "source_location": "L97",
+      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -4559,7 +4606,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L50",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -4570,7 +4617,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L66",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -4581,7 +4628,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L66",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -4592,7 +4639,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L76",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -4616,7 +4663,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "web/app.js",
-      "source_location": "L45",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -4633,5 +4680,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "78dd6c679502354f62c327e94d89653ebf0dbb4b"
+  "built_at_commit": "a4aabfbb2c8b88ceb1d433e5d6e262cbf2dd606b"
 }
