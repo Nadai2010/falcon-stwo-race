@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Falcon × Stwo Race</title>
+  <meta name="description" content="Original against record, measured live on this machine: a full Stwo proof, a light proof, and a Falcon-512 signature check on Starknet.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;900&family=Instrument+Sans:wght@400;500;600&family=Martian+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="lattice" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="top">
+    <div class="brand"><span class="dot"></span> falcon-stwo-race</div>
+    <nav class="links">
+      <a href="https://stwo.provably.fast/" target="_blank" rel="noopener">stwo.provably.fast</a>
+      <a href="https://falcon.provably.fast/" target="_blank" rel="noopener">falcon.provably.fast</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow reveal" style="--d:0">Live · measured on this machine · nothing pre-recorded</p>
+      <h1 class="reveal" style="--d:1">Quantum-safe,<br><em>and fast.</em></h1>
+      <p class="lede reveal" style="--d:2">STARK proofs are hash-based and already post-quantum. Signatures were the weak point. Three races, original against record, in the same configuration: a full proof at 100 provable bits, a proof in about a gigabyte of memory, and a Falcon-512 signature checked by a Starknet account.</p>
+      <div class="controls reveal" style="--d:3">
+        <button id="go" class="go" type="button" aria-describedby="go-hint">
+          <span class="go-ring" aria-hidden="true"></span>
+          <span class="go-label">Run the three races</span>
+        </button>
+        <div class="mode" role="radiogroup" aria-label="How the two sides share the machine">
+          <label><input type="radio" name="mode" value="parallel" checked> <span>Side by side</span><small>each on half the cores</small></label>
+          <label><input type="radio" name="mode" value="sequential"> <span>One after the other</span><small>each on the full machine</small></label>
+        </div>
+        <p id="go-hint" class="hint">Press <kbd>R</kbd> to start, <kbd>Esc</kbd> to stop.</p>
+      </div>
+      <div id="setup" class="setup" hidden></div>
+    </section>
+
+    <section id="lanes" class="lanes" aria-live="polite"></section>
+
+    <section class="credits">
+      <div class="credits-head">
+        <p class="eyebrow">Built together</p>
+        <h2>Every record stands on earlier work.</h2>
+        <p class="lede small">These are the people whose public activity on provably.fast fed the records raced above: leads, builds, reproductions, negative results and reviews. The trees include all of it; "record" means the community's best, not one person's.</p>
+      </div>
+      <ul id="people" class="people"></ul>
+      <p class="source" id="people-source"></p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Original and record always run the same statement, security parameters and thread budget. Proofs are checked by the season's verifier; gas is Sierra gas reported by Starknet Foundry. Official figures are labelled with their source and date.</p>
+  </footer>
+
+  <template id="lane-tpl">
+    <article class="lane">
+      <div class="lane-info">
+        <p class="kicker"></p>
+        <h3 class="lane-title"></h3>
+        <p class="lane-sub"></p>
+        <div class="verdict" hidden><span class="verdict-num"></span><span class="verdict-txt"></span></div>
+        <p class="official"></p>
+      </div>
+      <div class="lane-race">
+        <div class="side" data-side="original">
+          <div class="side-head"><span class="swatch"></span><span class="side-label"></span><span class="chip"></span></div>
+          <div class="readouts"><span class="r-main">—</span><span class="r-sub"></span></div>
+        </div>
+        <div class="side" data-side="record">
+          <div class="side-head"><span class="swatch"></span><span class="side-label"></span><span class="chip"></span></div>
+          <div class="readouts"><span class="r-main">—</span><span class="r-sub"></span></div>
+        </div>
+        <canvas class="plot" height="190"></canvas>
+        <div class="gasbars" hidden>
+          <div class="gasbar" data-side="original"><i></i><b></b></div>
+          <div class="gasbar" data-side="record"><i></i><b></b></div>
+          <div class="gasscale"><span>0</span><span>Sierra gas per verification, same input on both sides</span></div>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>

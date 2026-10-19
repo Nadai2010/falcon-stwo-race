@@ -2,5 +2,9 @@ node_modules/
 __pycache__/
 *.pyc
 config.local.json
-runs/
 .env
+build/
+runs/*
+!runs/.gitkeep
+graphify-out/cache/
+graphify-out/manifest.json
