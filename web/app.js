@@ -43,11 +43,16 @@ async function init() {
   const rp = new URLSearchParams(location.search).get("replay");
   if (rp !== null) replay(rp === "sequential" ? "sample-run-sequential.json" : "sample-run.json");
   $("#go").addEventListener("click", toggle);
+  $("#fit").addEventListener("click", () => setStage(!document.body.classList.contains("stage")));
+  let stage = new URLSearchParams(location.search).has("stage");
+  try { stage = stage || localStorage.getItem("stage") === "1"; } catch {}
+  setStage(stage);
   state.eyebrow = $(".eyebrow").textContent;
   window.addEventListener("keydown", (e) => {
     if (e.target.closest("input, textarea") || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
     if (e.key === "r" || e.key === "R") start();
     if (e.key === "Escape") stop();
+    if (e.key === "f" || e.key === "F") setStage(!document.body.classList.contains("stage"));
   });
   window.addEventListener("resize", () => state.lanes.forEach((l) => drawPlot(l.id)));
 }
@@ -88,6 +93,13 @@ function showSetup(missing) {
 }
 
 function toggle() { state.source ? stop() : start(); }
+
+function setStage(on) {
+  document.body.classList.toggle("stage", on);
+  $("#fit").setAttribute("aria-pressed", String(on));
+  try { localStorage.setItem("stage", on ? "1" : "0"); } catch {}
+  requestAnimationFrame(() => state.lanes.forEach((l) => drawPlot(l.id)));
+}
 
 function stopReplay() {
   clearTimeout(state.replayTimer);
@@ -160,7 +172,7 @@ function handle(ev) {
   if (ev.type === "lane") {
     v.el.classList.toggle("active", ev.state === "running");
     if (ev.state === "running") {
-      if (state.source) v.el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+      if (state.source && !document.body.classList.contains("stage")) v.el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
       for (const side of ["original", "record"]) {
         setChip(ev.lane, side, "run", lane.kind === "gas" ? "compiling" : "proving");
         if (lane.kind === "gas") $(`.gasbar[data-side="${side}"]`, v.el).classList.add("scan");

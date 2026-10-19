@@ -16,16 +16,20 @@
 
   <header class="top">
     <div class="brand"><span class="dot"></span> falcon-stwo-race</div>
-    <nav class="links">
-      <a href="https://stwo.provably.fast/" target="_blank" rel="noopener">stwo.provably.fast</a>
-      <a href="https://falcon.provably.fast/" target="_blank" rel="noopener">falcon.provably.fast</a>
-    </nav>
+    <div class="top-right">
+      <button id="fit" class="fit" type="button" aria-pressed="false" title="Fit everything on one screen (F)">Fit to screen</button>
+      <div class="built" aria-label="Built on">
+        <span>Built on</span>
+        <a href="https://github.com/starkware-libs/stwo" target="_blank" rel="noopener"><img src="assets/starkware-libs.png" alt="">Stwo</a>
+        <a href="https://www.starknet.io/" target="_blank" rel="noopener"><img src="assets/starknet-io.png" alt="">Starknet</a>
+      </div>
+    </div>
   </header>
 
   <main>
     <section class="hero">
       <p class="eyebrow reveal" style="--d:0">Live · measured on this machine · nothing pre-recorded</p>
-      <h1 class="reveal" style="--d:1">Quantum-safe,<br><em>and fast.</em></h1>
+      <h1 class="reveal" style="--d:1">Quantum-safe, <br><em>and fast.</em></h1>
       <p class="lede reveal" style="--d:2">STARK proofs are hash-based and already post-quantum. Signatures were the weak point. Three races, original against record, in the same configuration: a full proof at 100 provable bits, a proof in about a gigabyte of memory, and a Falcon-512 signature checked by a Starknet account.</p>
       <div class="controls reveal" style="--d:3">
         <button id="go" class="go" type="button" aria-describedby="go-hint">
@@ -36,7 +40,7 @@
           <label><input type="radio" name="mode" value="parallel" checked> <span>Side by side</span><small>each on half the cores</small></label>
           <label><input type="radio" name="mode" value="sequential"> <span>One after the other</span><small>each on the full machine</small></label>
         </div>
-        <p id="go-hint" class="hint">Press <kbd>R</kbd> to start, <kbd>Esc</kbd> to stop.</p>
+        <p id="go-hint" class="hint">Press <kbd>R</kbd> to start, <kbd>Esc</kbd> to stop, <kbd>F</kbd> to fit the screen.</p>
       </div>
       <div id="setup" class="setup" hidden></div>
     </section>
@@ -55,6 +59,7 @@
   </main>
 
   <footer class="foot">
+    <p class="disclaimer">An independent community demo. Not affiliated with, or endorsed by, StarkWare, the Starknet Foundation or OpenZeppelin; their names and logos belong to them and only say what the races run on.</p>
     <p>Original and record always run the same statement, security parameters and thread budget. Proofs are checked by the season's verifier; gas is Sierra gas reported by Starknet Foundry. Official figures are labelled with their source and date.</p>
   </footer>
 
