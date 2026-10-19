@@ -152,6 +152,8 @@ class Race:
         self.cancelled = threading.Event()
         self.lock = threading.Lock()
         self.procs: list[subprocess.Popen] = []
+        self._mainnet_thread: threading.Thread | None = None
+        self._mainnet_result: dict | None = None
         runs = ROOT / "runs"
         self.workdir = Path(tempfile.mkdtemp(prefix="race-", dir=runs if runs.is_dir() else None))
 
@@ -289,30 +291,45 @@ class Race:
                        "ok": bool(m) and s.returncode == 0})
         self._mainnet_price(lane)
 
+    def _start_mainnet(self) -> None:
+        """Start the mainnet pricing in the background so its result is ready when the Falcon race ends.
+        It starts with the race at the lowest CPU priority (nice 19): it mostly waits on the RPC, so the
+        provers keep their cores."""
+        if self._mainnet_thread or not mainnet_ready(self.config.get("mainnet")):
+            return
+        def work() -> None:
+            cfg_path = self.workdir / "mainnet.json"
+            cfg_path.write_text(json.dumps(self.config["mainnet"]))
+            sim = Side("falcon", "mainnet", ["nice", "-n", "19", "node", str(ROOT / "server" / "mainnet_sim.mjs"), str(cfg_path)])
+            try:
+                self._spawn(sim)
+                sim.proc.wait(timeout=MAINNET_TIMEOUT_S)
+                self._mainnet_result = json.loads(sim.stdout_path.read_text().strip().splitlines()[-1])
+            except (LaneError, subprocess.TimeoutExpired, ValueError, IndexError, OSError):
+                if sim.proc and sim.proc.returncode is None:
+                    _kill(sim.proc)
+            finally:
+                if sim.proc:
+                    with _LIVE_LOCK:
+                        _LIVE.discard(sim.proc)
+        self._mainnet_thread = threading.Thread(target=work, daemon=True)
+        self._mainnet_thread.start()
+
     def _mainnet_price(self, lane: dict) -> None:
-        """Price one Falcon-signed transaction of each account on mainnet, by simulation (nothing is sent).
-        Without a local mainnet setup the page shows the recorded simulation, labelled as such."""
-        cfg = self.config.get("mainnet")
+        """Show the mainnet price of one Falcon-signed transaction per account (simulation, nothing sent)
+        once the Falcon race is over; without a local mainnet setup, the recorded simulation."""
         if self.cancelled.is_set():
             return
-        if not mainnet_ready(cfg):
+        self._start_mainnet()
+        if not self._mainnet_thread:
             self.emit({"type": "mainnet", "lane": lane["id"], "state": "recorded"})
             return
-        self.emit({"type": "mainnet", "lane": lane["id"], "state": "running"})
-        cfg_path = self.workdir / "mainnet.json"
-        cfg_path.write_text(json.dumps(cfg))
-        sim = Side(lane["id"], "mainnet", ["node", str(ROOT / "server" / "mainnet_sim.mjs"), str(cfg_path)])
-        self._spawn(sim)
-        try:
-            sim.proc.wait(timeout=MAINNET_TIMEOUT_S)
-        except subprocess.TimeoutExpired:
-            _kill(sim.proc)
-        with _LIVE_LOCK:
-            _LIVE.discard(sim.proc)
-        try:
-            data = json.loads(sim.stdout_path.read_text().strip().splitlines()[-1])
-            self.emit({"type": "mainnet", "lane": lane["id"], "state": "done", "data": data})
-        except (ValueError, IndexError):
+        if self._mainnet_thread.is_alive():
+            self.emit({"type": "mainnet", "lane": lane["id"], "state": "running"})
+            self._mainnet_thread.join(timeout=MAINNET_TIMEOUT_S)
+        if self._mainnet_result:
+            self.emit({"type": "mainnet", "lane": lane["id"], "state": "done", "data": self._mainnet_result})
+        elif not self.cancelled.is_set():
             self.emit({"type": "mainnet", "lane": lane["id"], "state": "recorded", "note": "live pricing failed"})
 
     def run(self, lane_ids: list[str]) -> None:
@@ -322,6 +339,8 @@ class Race:
                 if self.cancelled.is_set():
                     break
                 lane = lanes[lid]
+                if "falcon" in lane_ids:
+                    self._start_mainnet()
                 try:
                     (self._falcon_lane if lane["kind"] == "gas" else self._prover_lane)(lane)
                     self.emit({"type": "lane", "lane": lid, "state": "finished"})

@@ -58,7 +58,7 @@ body {
   min-height: 100vh; padding: 0 var(--gutter);
 }
 /* Everything under the header sits in the middle of the remaining height. */
-.stage { align-self: center; padding-bottom: 2vh; }
+.stage { align-self: start; padding: 1vh 0 2vh; }
 
 /* Header */
 .top { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 6px; font: 500 13px/1 var(--mono); }
@@ -109,6 +109,7 @@ h1 em { font-style: normal; color: var(--rec); }
 @keyframes pop { from { transform: scale(.86); opacity: 0; } to { transform: none; opacity: 1; } }
 .official { grid-column: 1 / -1; font: 400 10px/1.55 var(--mono); color: var(--faint); margin: 0; }
 .official a { color: var(--muted); }
+.official .who { color: var(--rec); }
 .challenge {
   flex: none; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
   font: 600 10px var(--mono); color: var(--paper); padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px;
@@ -149,7 +150,10 @@ h1 em { font-style: normal; color: var(--rec); }
 .r-sub { font: 400 10px var(--mono); color: var(--muted); min-height: 1em; overflow: hidden; text-overflow: ellipsis; }
 .viz { position: relative; height: clamp(205px, 24vh, 250px); border-top: 1px solid var(--line-soft); }
 .plot { position: absolute; inset: 6px 0 0; width: 100%; height: calc(100% - 6px); display: block; }
-.gasbars { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-start; gap: 8px; padding-top: 12px; }
+.gasbars { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-start; gap: 6px; padding-top: 8px; }
+/* The Falcon card holds bars and the mainnet price: its block grows with its content, never clips it. */
+.lane[data-lane="falcon"] .viz { height: auto; min-height: clamp(205px, 24vh, 250px); }
+.lane[data-lane="falcon"] .gasbars { position: static; }
 .gasbar { position: relative; flex: none; height: clamp(22px, 2.8vh, 30px); border-radius: 5px; background: var(--line-soft); overflow: hidden; }
 .gasbar i { display: block; height: 100%; width: 0; transition: width 1.4s var(--ease); }
 .gasbar b { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font: 600 11px var(--mono); color: var(--ink); }
@@ -157,10 +161,10 @@ h1 em { font-style: normal; color: var(--rec); }
 .gasbar[data-side="record"] i { background: var(--rec); }
 .gasbar.scan i { width: 100% !important; background: linear-gradient(90deg, transparent, rgba(236, 231, 218, .22), transparent); background-size: 40% 100%; background-repeat: no-repeat; animation: scan 1.3s linear infinite; }
 @keyframes scan { from { background-position: -40% 0; } to { background-position: 140% 0; } }
-.gasscale { flex: none; display: flex; justify-content: space-between; font: 400 10px var(--mono); color: var(--faint); }
+.gasscale { flex: none; display: flex; justify-content: flex-end; font: 400 10px var(--mono); color: var(--faint); }
 
 /* Mainnet price of one Falcon-signed transaction, per account. */
-.mainnet { margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--line-soft); display: grid; gap: 5px; }
+.mainnet { margin-top: 2px; padding-top: 8px; border-top: 1px solid var(--line-soft); display: grid; gap: 4px; }
 .mn-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .mn-title { font: 700 14px/1 var(--display); text-transform: uppercase; letter-spacing: .04em; color: var(--paper); white-space: nowrap; }
 .mn-ratio { font: 600 11px var(--mono); color: var(--rec); white-space: nowrap; }
@@ -213,13 +217,12 @@ h1 em { font-style: normal; color: var(--rec); }
 .status.live { color: var(--paper); }
 kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); }
 
-.dock-people { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.dock-people { min-width: 0; overflow: visible; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .people-head { margin: 0; display: flex; align-items: baseline; gap: 10px; font: 700 16px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; }
 .people-head small { font: 400 10px var(--mono); color: var(--muted); text-transform: none; letter-spacing: 0; }
 /* Overlapping avatar stack in one row; hover lifts one and names it. */
 .people { list-style: none; margin: 0; padding: 0 0 0 10px; display: flex; flex-wrap: nowrap; justify-content: flex-start; }
-.people li { margin-left: -10px; transition: margin .3s var(--ease); }
-.people:hover li { margin-left: -4px; }
+.people li { margin-left: -10px; }
 .people a { display: block; border-radius: 50%; position: relative; }
 .people img { display: block; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--panel-solid); background: var(--panel-solid); transition: transform .25s var(--ease), border-color .25s; }
 .people a:hover img, .people a:focus-visible img { transform: translateY(-4px) scale(1.15); border-color: var(--rec); position: relative; z-index: 2; }

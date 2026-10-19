@@ -47,9 +47,9 @@
         ]
       },
       "official": {
-        "text": "Board: 0.4992 of the pinned prover's time, 16-core AVX2 host.",
+        "text": "Board: 2.64× faster than Stwo's 100-bit base, record by @nadai2010 (18 Oct).",
         "source": "https://stwo.provably.fast/",
-        "date": "2026-10-18"
+        "date": "checked 2026-10-19"
       },
       "challenge": {
         "text": "Take the challenge",
@@ -89,9 +89,9 @@
         ]
       },
       "official": {
-        "text": "Board: 13.9 GiB to 1.04 GiB in season 1.",
+        "text": "Board: 13.4× less memory, 13.9 GiB to 1.04 GiB, lowest peak by @nadai2010 (job 7bb39eeb).",
         "source": "https://stwo.provably.fast/",
-        "date": "2026-10-12"
+        "date": "checked 2026-10-19"
       },
       "challenge": {
         "text": "See the season",
@@ -115,9 +115,9 @@
         "repo": "falcon_record_repo"
       },
       "official": {
-        "text": "Board: 48.4M to 27.9M gas, mean of 27 held-out signatures.",
+        "text": "Board: 48.4M to 27.9M gas (1.73×), record by @nadai2010 (18 Oct), mean of 27 signatures.",
         "source": "https://falcon.provably.fast/",
-        "date": "2026-10-18"
+        "date": "checked 2026-10-19"
       },
       "challenge": {
         "text": "Take the challenge",

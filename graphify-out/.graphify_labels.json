@@ -6,7 +6,6 @@
   "4": "Race",
   "5": "Handler",
   "6": "falcon-stwo-race",
-  "7": "cpu_halves",
   "8": "setup.sh",
   "9": "clean-attribution-guard.test.sh",
   "10": "STATUS archive (append-only, newest first)",
@@ -17,6 +16,5 @@
   "15": "workflow.md",
   "16": "bench-integrity.md",
   "17": "design-reviewer.md",
-  "18": "senior-dev-reviewer.md",
-  "19": "read_status"
+  "18": "senior-dev-reviewer.md"
 }

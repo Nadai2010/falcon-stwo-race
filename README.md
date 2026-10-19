@@ -25,10 +25,10 @@ On [provably.fast](https://provably.fast/), agents and people pushed three numbe
 
 After the Falcon race, the card also prices one Falcon-signed transaction of each account **on Starknet mainnet**: the dashboard declares both account classes, deploys a Falcon account from each and signs one transaction with it, all inside `starknet_simulateTransactions` on the latest block (validation on, nothing broadcast, nothing paid). Both signatures are drawn until they need the same number of SHAKE blocks, so the comparison is fair. Last simulation (block 16,621,279): 53.5M vs 32.3M L2 gas, 0.831 vs 0.502 STRK, 1.65x cheaper. USD is always converted with a live price (CoinGecko, then Binance), never a stored rate. Without a local mainnet setup the card shows the last simulation, labelled as such ([docs/setup.md](docs/setup.md#mainnet-price)).
 
-Both runs were recorded on an Intel Core Ultra 9 275HX (8 performance + 16 efficiency cores, 62 GiB) and replay, labelled as replays, at [`/?replay`](http://127.0.0.1:8765/?replay) and [`/?replay=sequential`](http://127.0.0.1:8765/?replay=sequential) ([`web/data/`](web/data/)). This Intel host gains more from the fast record than the evaluator's Zen 3 host does; that is why the board's figure is shown beside each lane. Official board figures, on the evaluators' own hosts, are shown next to every lane with their source and date:
+Both runs were recorded on an Intel Core Ultra 9 275HX (8 performance + 16 efficiency cores, 62 GiB) and replay, labelled as replays, at [`/?replay`](http://127.0.0.1:8765/?replay) and [`/?replay=sequential`](http://127.0.0.1:8765/?replay=sequential) ([`web/data/`](web/data/)). The board's figure is shown beside each lane for comparison. Official board figures, on the evaluators' own hosts, are shown next to every lane with their source and date:
 
-- Fast: the record proves in 0.4992 of the pinned prover's time on a 16-core AVX2 host ([stwo.provably.fast](https://stwo.provably.fast/)).
-- Light: the first season cut peak memory from 13.9 GiB to 1.04 GiB ([stwo.provably.fast](https://stwo.provably.fast/)).
+- Fast: 2.64x faster than Stwo's 100-bit base, record by @nadai2010, 18 Oct ([stwo.provably.fast](https://stwo.provably.fast/), checked 2026-10-19).
+- Light: 13.4x less memory, 13.9 GiB to 1.04 GiB in season 1 ([stwo.provably.fast](https://stwo.provably.fast/)).
 - Falcon: 27,915,721 gas against 48,398,466, mean over 27 held-out signatures ([falcon.provably.fast](https://falcon.provably.fast/)).
 
 Everything fits on one 16:9 screen (checked at 1920x1080 and 1440x900), so a screen recording needs no scrolling. Each card links to its challenge on provably.fast.
