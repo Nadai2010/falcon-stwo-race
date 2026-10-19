@@ -25,7 +25,7 @@ async function init() {
     $(".kicker", el).textContent = lane.kicker;
     $(".lane-title", el).textContent = lane.title;
     $(".lane-sub", el).textContent = lane.subtitle;
-    $(".official", el).innerHTML = `${lane.official.text} <a href="${lane.official.source}" target="_blank" rel="noopener">source</a>, ${lane.official.date}.`;
+    $(".official", el).innerHTML = `${lane.official.text} <a href="${lane.official.source}" target="_blank" rel="noopener">Source</a>, ${lane.official.date}.`;
     const ch = $(".challenge", el);
     ch.href = lane.challenge.url;
     $("span", ch).textContent = lane.challenge.text;
@@ -68,8 +68,8 @@ async function replay(file) {
   const box = $("#setup");
   box.hidden = false;
   box.classList.add("replay");
-  const how = run.mode === "parallel" ? "side by side, each side on its own half of each core type" : "one after the other, each side on the whole machine";
-  box.textContent = `Replay: every number above was measured on ${run.recorded} on ${run.machine}, ${how}.`;
+  const how = run.mode === "parallel" ? "side by side" : "one after the other";
+  box.textContent = `Replay of a run measured on ${run.recorded}, ${run.machine}, ${how}.`;
   for (const lane of state.lanes) reset(lane.id);
   let i = 0;
   const step = () => {
