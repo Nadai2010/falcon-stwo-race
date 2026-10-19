@@ -93,6 +93,7 @@ h1 em { font-style: normal; color: var(--rec); text-shadow: 0 0 60px var(--rec-g
   transition: border-color .4s, box-shadow .4s;
 }
 .lane::before { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, transparent, var(--rec), transparent); opacity: 0; transition: opacity .4s; }
+.lane:hover { border-color: #3a3d34; }
 .lane.active { border-color: #4a4d42; box-shadow: 0 0 0 1px rgba(255, 106, 43, 0.14), 0 30px 80px -40px var(--rec-glow); }
 .lane.active::before { opacity: 1; animation: sweep 2.2s linear infinite; background-size: 50% 100%; background-repeat: no-repeat; }
 @keyframes sweep { from { background-position: -50% 0; } to { background-position: 150% 0; } }
@@ -119,18 +120,30 @@ h1 em { font-style: normal; color: var(--rec); text-shadow: 0 0 60px var(--rec-g
 .challenge:hover i { transform: translateX(3px); }
 
 .lane-race { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 8px; padding: 12px 18px 12px; min-height: 0; }
-.sides { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.sides { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.side + .side { padding-left: 16px; border-left: 1px solid var(--line-soft); }
+.side:first-child { padding-right: 16px; }
 .side { min-width: 0; }
 .side-head { display: flex; align-items: center; gap: 8px; }
 .swatch { width: 20px; height: 3px; border-radius: 2px; flex: none; }
 .side[data-side="original"] .swatch { background: var(--orig); }
 .side[data-side="record"] .swatch { background: var(--rec); box-shadow: 0 0 10px var(--rec-glow); }
 .side-label { display: block; margin-top: 6px; font-size: 11px; line-height: 1.3; color: var(--muted); }
-.chip { margin-left: auto; font: 600 9px var(--mono); text-transform: uppercase; letter-spacing: .1em; padding: 3px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--faint); white-space: nowrap; }
-.chip.run { color: var(--paper); border-color: var(--paper); animation: blink 1.2s steps(2) infinite; }
-.chip.ok { color: var(--ink); background: var(--ok); border-color: var(--ok); }
-.chip.bad { color: var(--ink); background: var(--bad); border-color: var(--bad); }
-@keyframes blink { 50% { opacity: .45; } }
+/* Status chips: a quiet outline with a status dot; running shows a small spinner. */
+.chip {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font: 500 10px/1 var(--mono); letter-spacing: .03em; padding: 4px 9px 4px 8px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--faint); background: rgba(236, 231, 218, 0.02); white-space: nowrap;
+  transition: color .3s, border-color .3s, background .3s;
+}
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .6; flex: none; }
+.chip.run { color: var(--paper); border-color: rgba(236, 231, 218, 0.28); }
+.chip.run::before { width: 8px; height: 8px; background: none; border: 1.5px solid currentColor; border-right-color: transparent; opacity: 1; animation: spin .8s linear infinite; }
+.chip.ok { color: var(--ok); border-color: rgba(196, 244, 95, 0.32); background: rgba(196, 244, 95, 0.06); }
+.chip.ok::before { opacity: 1; box-shadow: 0 0 8px var(--ok); }
+.chip.bad { color: var(--bad); border-color: rgba(255, 77, 106, 0.4); background: rgba(255, 77, 106, 0.07); }
+.chip.bad::before { opacity: 1; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .readouts { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; font-variant-numeric: tabular-nums; }
 .r-main { font: 600 clamp(18px, 1.55vw, 28px)/1.05 var(--mono); letter-spacing: -0.03em; white-space: nowrap; }
 .lane[data-lane="falcon"] .r-main { font-size: clamp(16px, 1.3vw, 23px); }
@@ -165,6 +178,10 @@ h1 em { font-style: normal; color: var(--rec); text-shadow: 0 0 60px var(--rec-g
 .go:hover { transform: translateY(-2px); box-shadow: 0 24px 70px -12px var(--rec-glow), inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
 .go:active { transform: translateY(1px); }
 .go:focus-visible { outline: 2px solid var(--paper); outline-offset: 4px; }
+/* Both labels share one grid cell, so Run and Stop give the button the same width. */
+.go-label { display: grid; }
+.go-label > span { grid-area: 1 / 1; text-align: center; transition: opacity .2s; }
+.go-label > span[aria-hidden="true"] { opacity: 0; }
 .go-ring { position: absolute; inset: -7px; border-radius: inherit; border: 1px solid var(--rec); opacity: .45; z-index: -1; animation: ring 2.6s var(--ease) infinite; }
 .go.running { background: var(--paper); color: var(--ink); box-shadow: none; }
 .go.running .go-ring { border-color: var(--paper); animation-duration: 1.1s; }
