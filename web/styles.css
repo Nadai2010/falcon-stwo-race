@@ -73,11 +73,12 @@ body {
 .built img { width: 22px; height: 22px; border-radius: 6px; }
 
 /* Title row */
-.hero { display: grid; grid-template-columns: auto minmax(0, 46ch); justify-content: space-between; align-items: end; gap: 12px 48px; padding: 6px 0 12px; }
+.hero { padding: 10px 0 30px; }
 .eyebrow { font: 400 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin: 0 0 6px; }
 h1 { font: 900 clamp(40px, 4.4vw, 76px)/0.9 var(--display); text-transform: uppercase; letter-spacing: -0.01em; margin: 0; }
 h1 em { font-style: normal; color: var(--rec); text-shadow: 0 0 60px var(--rec-glow); }
-.lede { margin: 0; color: #c9c4b7; font-size: 14px; line-height: 1.5; }
+.lede { margin: 12px 0 0; color: #c9c4b7; font-size: 15px; line-height: 1.55; }
+.lede span { display: block; }
 .hero-title, .lede { opacity: 0; animation: rise .8s var(--ease) forwards; }
 .lede { animation-delay: 120ms; }
 
@@ -150,8 +151,8 @@ h1 em { font-style: normal; color: var(--rec); text-shadow: 0 0 60px var(--rec-g
 
 /* Dock: run controls and contributors, under the cards */
 /* Dock under the cards: run controls, then the contributors on their own row. */
-.dock { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; margin-top: 18px; }
-.dock-card { padding: 16px 20px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); backdrop-filter: blur(6px); }
+.dock { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; margin-top: 30px; }
+.dock-card { padding: 20px 24px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); backdrop-filter: blur(6px); }
 .dock-run { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .go {
   position: relative; isolation: isolate;
@@ -200,8 +201,8 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 .people a:hover::after, .people a:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
 
 /* Footnote */
-.foot { padding: 8px 0 10px; font: 400 10px/1.5 var(--mono); color: var(--faint); }
-.foot p { margin: 0 0 2px; max-width: 190ch; }
+.foot { padding: 26px 0 16px; font: 400 10px/1.6 var(--mono); color: var(--faint); }
+.foot p { margin: 0 0 6px; max-width: 190ch; }
 .foot b { color: var(--muted); font-weight: 600; }
 .setup { color: #ffc0c9; }
 .setup.replay { color: var(--muted); }
@@ -213,7 +214,7 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 }
 @media (max-height: 960px) and (min-width: 1100px) {
   .top { padding: 10px 0 4px; }
-  .hero { padding: 2px 0 8px; }
+  .hero { padding: 4px 0 20px; }
   h1 { font-size: clamp(36px, 3.8vw, 60px); }
   .lede { font-size: 13px; }
   .lane-info { padding: 12px 16px 10px; gap: 6px 12px; }
@@ -222,14 +223,13 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
   .verdict-num { font-size: clamp(38px, 3.4vw, 58px); }
   .lane-race { padding: 10px 14px; gap: 8px; }
   .viz { height: clamp(120px, 20vh, 190px); }
-  .dock { margin-top: 12px; }
-  .dock-card { padding: 12px 16px; }
+  .dock { margin-top: 20px; }
+  .dock-card { padding: 14px 18px; }
   .go { padding: 12px 24px; font-size: 19px; }
   .people img { width: 26px; height: 26px; }
-  .foot { padding: 8px 0 10px; font-size: 10px; }
+  .foot { padding: 16px 0 10px; font-size: 10px; }
 }
 @media (max-width: 1099px) {
-  .hero { grid-template-columns: 1fr; }
   .lanes { grid-template-columns: 1fr; grid-template-rows: none; row-gap: 14px; }
   .lane { grid-row: auto; grid-template-rows: auto auto; }
   .viz { height: 200px; }
