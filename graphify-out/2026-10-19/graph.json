@@ -14,7 +14,7 @@
       "file_type": "code",
       "norm_label": "laneerror",
       "source_file": "server/race.py",
-      "source_location": "L31"
+      "source_location": "L32"
     },
     {
       "id": "server_race_race",
@@ -27,7 +27,7 @@
       "file_type": "code",
       "norm_label": "race",
       "source_file": "server/race.py",
-      "source_location": "L137"
+      "source_location": "L147"
     },
     {
       "id": "server_race_side",
@@ -40,7 +40,7 @@
       "file_type": "code",
       "norm_label": "side",
       "source_file": "server/race.py",
-      "source_location": "L121"
+      "source_location": "L131"
     },
     {
       "id": "server_app_handler",
@@ -53,7 +53,7 @@
       "file_type": "code",
       "norm_label": "handler",
       "source_file": "server/app.py",
-      "source_location": "L24"
+      "source_location": "L51"
     },
     {
       "id": "web_app_countup",
@@ -65,7 +65,7 @@
       "file_type": "code",
       "norm_label": "countup()",
       "source_file": "web/app.js",
-      "source_location": "L272"
+      "source_location": "L311"
     },
     {
       "id": "web_app_css",
@@ -89,7 +89,7 @@
       "file_type": "code",
       "norm_label": "drawplot()",
       "source_file": "web/app.js",
-      "source_location": "L289"
+      "source_location": "L328"
     },
     {
       "id": "web_app_handle",
@@ -101,7 +101,7 @@
       "file_type": "code",
       "norm_label": "handle()",
       "source_file": "web/app.js",
-      "source_location": "L175"
+      "source_location": "L180"
     },
     {
       "id": "web_app_init",
@@ -125,7 +125,19 @@
       "file_type": "code",
       "norm_label": "loadpeople()",
       "source_file": "web/app.js",
-      "source_location": "L346"
+      "source_location": "L385"
+    },
+    {
+      "id": "web_app_mainnet",
+      "label": "mainnet()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "app.js",
+      "file_type": "code",
+      "norm_label": "mainnet()",
+      "source_file": "web/app.js",
+      "source_location": "L282"
     },
     {
       "id": "web_app_nicestep",
@@ -137,7 +149,7 @@
       "file_type": "code",
       "norm_label": "nicestep()",
       "source_file": "web/app.js",
-      "source_location": "L340"
+      "source_location": "L379"
     },
     {
       "id": "web_app_notice",
@@ -149,7 +161,7 @@
       "file_type": "code",
       "norm_label": "notice()",
       "source_file": "web/app.js",
-      "source_location": "L89"
+      "source_location": "L91"
     },
     {
       "id": "web_app_replay",
@@ -161,7 +173,7 @@
       "file_type": "code",
       "norm_label": "replay()",
       "source_file": "web/app.js",
-      "source_location": "L64"
+      "source_location": "L65"
     },
     {
       "id": "web_app_reset",
@@ -173,7 +185,7 @@
       "file_type": "code",
       "norm_label": "reset()",
       "source_file": "web/app.js",
-      "source_location": "L149"
+      "source_location": "L153"
     },
     {
       "id": "web_app_schedule",
@@ -185,7 +197,7 @@
       "file_type": "code",
       "norm_label": "schedule()",
       "source_file": "web/app.js",
-      "source_location": "L283"
+      "source_location": "L322"
     },
     {
       "id": "web_app_setchip",
@@ -197,7 +209,7 @@
       "file_type": "code",
       "norm_label": "setchip()",
       "source_file": "web/app.js",
-      "source_location": "L169"
+      "source_location": "L174"
     },
     {
       "id": "web_app_setstatus",
@@ -209,7 +221,7 @@
       "file_type": "code",
       "norm_label": "setstatus()",
       "source_file": "web/app.js",
-      "source_location": "L104"
+      "source_location": "L106"
     },
     {
       "id": "web_app_showsetup",
@@ -221,7 +233,7 @@
       "file_type": "code",
       "norm_label": "showsetup()",
       "source_file": "web/app.js",
-      "source_location": "L96"
+      "source_location": "L98"
     },
     {
       "id": "web_app_sideel",
@@ -233,7 +245,7 @@
       "file_type": "code",
       "norm_label": "sideel()",
       "source_file": "web/app.js",
-      "source_location": "L168"
+      "source_location": "L173"
     },
     {
       "id": "web_app_start",
@@ -245,7 +257,7 @@
       "file_type": "code",
       "norm_label": "start()",
       "source_file": "web/app.js",
-      "source_location": "L118"
+      "source_location": "L120"
     },
     {
       "id": "web_app_stop",
@@ -257,7 +269,7 @@
       "file_type": "code",
       "norm_label": "stop()",
       "source_file": "web/app.js",
-      "source_location": "L137"
+      "source_location": "L140"
     },
     {
       "id": "web_app_stopreplay",
@@ -269,7 +281,7 @@
       "file_type": "code",
       "norm_label": "stopreplay()",
       "source_file": "web/app.js",
-      "source_location": "L110"
+      "source_location": "L112"
     },
     {
       "id": "web_app_toggle",
@@ -281,7 +293,7 @@
       "file_type": "code",
       "norm_label": "toggle()",
       "source_file": "web/app.js",
-      "source_location": "L102"
+      "source_location": "L104"
     },
     {
       "id": "web_app_verdict",
@@ -293,7 +305,31 @@
       "file_type": "code",
       "norm_label": "verdict()",
       "source_file": "web/app.js",
-      "source_location": "L252"
+      "source_location": "L261"
+    },
+    {
+      "id": "server_race_read_status",
+      "label": "read_status()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "read_status",
+      "file_type": "code",
+      "norm_label": "read_status()",
+      "source_file": "server/race.py",
+      "source_location": "L59"
+    },
+    {
+      "id": "server_race_read_status_kb",
+      "label": "kb()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "read_status",
+      "file_type": "code",
+      "norm_label": "kb()",
+      "source_file": "server/race.py",
+      "source_location": "L65"
     },
     {
       "id": "scripts_fetch_contributors_activity",
@@ -329,19 +365,7 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "server/app.py",
-      "source_location": "L112"
-    },
-    {
-      "id": "server_race_cpu_halves",
-      "label": "cpu_halves()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "race.py",
-      "file_type": "code",
-      "norm_label": "cpu_halves()",
-      "source_file": "server/race.py",
-      "source_location": "L70"
+      "source_location": "L142"
     },
     {
       "id": "server_race_expand",
@@ -353,7 +377,7 @@
       "file_type": "code",
       "norm_label": "expand()",
       "source_file": "server/race.py",
-      "source_location": "L44"
+      "source_location": "L54"
     },
     {
       "id": "server_race_kill_all",
@@ -365,7 +389,7 @@
       "file_type": "code",
       "norm_label": "kill_all()",
       "source_file": "server/race.py",
-      "source_location": "L110"
+      "source_location": "L120"
     },
     {
       "id": "server_race_load_config",
@@ -377,43 +401,43 @@
       "file_type": "code",
       "norm_label": "load_config()",
       "source_file": "server/race.py",
-      "source_location": "L35"
+      "source_location": "L36"
     },
     {
-      "id": "server_race_parse_cpulist",
-      "label": "parse_cpulist()",
+      "id": "server_race_mainnet_ready",
+      "label": "mainnet_ready()",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
       "community_name": "race.py",
       "file_type": "code",
-      "norm_label": "parse_cpulist()",
+      "norm_label": "mainnet_ready()",
       "source_file": "server/race.py",
-      "source_location": "L61"
+      "source_location": "L46"
     },
     {
-      "id": "server_race_read_status",
-      "label": "read_status()",
+      "id": "server_mainnet_sim_fri",
+      "label": "fri()",
       "_callable": true,
       "_origin": "ast",
-      "community": 2,
-      "community_name": "race.py",
+      "community": 3,
+      "community_name": "mainnet_sim.mjs",
       "file_type": "code",
-      "norm_label": "read_status()",
-      "source_file": "server/race.py",
-      "source_location": "L49"
+      "norm_label": "fri()",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L44"
     },
     {
-      "id": "server_race_read_status_kb",
-      "label": "kb()",
+      "id": "server_mainnet_sim_shakeblocks",
+      "label": "shakeBlocks()",
       "_callable": true,
       "_origin": "ast",
-      "community": 2,
-      "community_name": "race.py",
+      "community": 3,
+      "community_name": "mainnet_sim.mjs",
       "file_type": "code",
-      "norm_label": "kb()",
-      "source_file": "server/race.py",
-      "source_location": "L55"
+      "norm_label": "shakeblocks()",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L20"
     },
     {
       "id": "server_race_kill",
@@ -425,7 +449,7 @@
       "file_type": "code",
       "norm_label": "_kill()",
       "source_file": "server/race.py",
-      "source_location": "L99"
+      "source_location": "L109"
     },
     {
       "id": "server_race_race_cancel",
@@ -437,7 +461,7 @@
       "file_type": "code",
       "norm_label": ".cancel()",
       "source_file": "server/race.py",
-      "source_location": "L170"
+      "source_location": "L180"
     },
     {
       "id": "server_race_race_cancel_lane",
@@ -449,7 +473,7 @@
       "file_type": "code",
       "norm_label": ".cancel_lane()",
       "source_file": "server/race.py",
-      "source_location": "L298"
+      "source_location": "L335"
     },
     {
       "id": "server_race_race_falcon_lane",
@@ -461,7 +485,7 @@
       "file_type": "code",
       "norm_label": "._falcon_lane()",
       "source_file": "server/race.py",
-      "source_location": "L263"
+      "source_location": "L273"
     },
     {
       "id": "server_race_race_init",
@@ -473,7 +497,19 @@
       "file_type": "code",
       "norm_label": ".__init__()",
       "source_file": "server/race.py",
-      "source_location": "L140"
+      "source_location": "L150"
+    },
+    {
+      "id": "server_race_race_mainnet_price",
+      "label": "._mainnet_price()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Race",
+      "file_type": "code",
+      "norm_label": "._mainnet_price()",
+      "source_file": "server/race.py",
+      "source_location": "L292"
     },
     {
       "id": "server_race_race_preflight",
@@ -485,7 +521,7 @@
       "file_type": "code",
       "norm_label": "._preflight()",
       "source_file": "server/race.py",
-      "source_location": "L214"
+      "source_location": "L224"
     },
     {
       "id": "server_race_race_prover_lane",
@@ -497,7 +533,7 @@
       "file_type": "code",
       "norm_label": "._prover_lane()",
       "source_file": "server/race.py",
-      "source_location": "L220"
+      "source_location": "L230"
     },
     {
       "id": "server_race_race_reap",
@@ -509,7 +545,7 @@
       "file_type": "code",
       "norm_label": "._reap()",
       "source_file": "server/race.py",
-      "source_location": "L178"
+      "source_location": "L188"
     },
     {
       "id": "server_race_race_run",
@@ -521,7 +557,7 @@
       "file_type": "code",
       "norm_label": ".run()",
       "source_file": "server/race.py",
-      "source_location": "L281"
+      "source_location": "L318"
     },
     {
       "id": "server_race_race_spawn",
@@ -533,7 +569,7 @@
       "file_type": "code",
       "norm_label": "._spawn()",
       "source_file": "server/race.py",
-      "source_location": "L149"
+      "source_location": "L159"
     },
     {
       "id": "server_race_race_watch",
@@ -545,7 +581,7 @@
       "file_type": "code",
       "norm_label": "._watch()",
       "source_file": "server/race.py",
-      "source_location": "L194"
+      "source_location": "L204"
     },
     {
       "id": "server_race_stream",
@@ -557,7 +593,7 @@
       "file_type": "code",
       "norm_label": "stream()",
       "source_file": "server/race.py",
-      "source_location": "L309"
+      "source_location": "L346"
     },
     {
       "id": "server_race_stream_emit",
@@ -569,7 +605,7 @@
       "file_type": "code",
       "norm_label": "emit()",
       "source_file": "server/race.py",
-      "source_location": "L313"
+      "source_location": "L350"
     },
     {
       "id": "server_app_handler_do_get",
@@ -581,7 +617,7 @@
       "file_type": "code",
       "norm_label": ".do_get()",
       "source_file": "server/app.py",
-      "source_location": "L62"
+      "source_location": "L89"
     },
     {
       "id": "server_app_handler_json",
@@ -593,7 +629,7 @@
       "file_type": "code",
       "norm_label": "._json()",
       "source_file": "server/app.py",
-      "source_location": "L30"
+      "source_location": "L57"
     },
     {
       "id": "server_app_handler_local",
@@ -605,7 +641,7 @@
       "file_type": "code",
       "norm_label": "._local()",
       "source_file": "server/app.py",
-      "source_location": "L51"
+      "source_location": "L78"
     },
     {
       "id": "server_app_handler_log_message",
@@ -617,7 +653,7 @@
       "file_type": "code",
       "norm_label": ".log_message()",
       "source_file": "server/app.py",
-      "source_location": "L27"
+      "source_location": "L54"
     },
     {
       "id": "server_app_handler_race",
@@ -629,7 +665,7 @@
       "file_type": "code",
       "norm_label": "._race()",
       "source_file": "server/app.py",
-      "source_location": "L82"
+      "source_location": "L112"
     },
     {
       "id": "server_app_handler_static",
@@ -641,14 +677,50 @@
       "file_type": "code",
       "norm_label": "._static()",
       "source_file": "server/app.py",
-      "source_location": "L38"
+      "source_location": "L65"
+    },
+    {
+      "id": "server_app_strk_usd",
+      "label": "strk_usd()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Handler",
+      "file_type": "code",
+      "norm_label": "strk_usd()",
+      "source_file": "server/app.py",
+      "source_location": "L35"
+    },
+    {
+      "id": "server_race_cpu_halves",
+      "label": "cpu_halves()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 7,
+      "community_name": "cpu_halves",
+      "file_type": "code",
+      "norm_label": "cpu_halves()",
+      "source_file": "server/race.py",
+      "source_location": "L80"
+    },
+    {
+      "id": "server_race_parse_cpulist",
+      "label": "parse_cpulist()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 7,
+      "community_name": "cpu_halves",
+      "file_type": "code",
+      "norm_label": "parse_cpulist()",
+      "source_file": "server/race.py",
+      "source_location": "L71"
     },
     {
       "id": "docs_architecture",
       "label": "architecture.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "architecture.md",
@@ -660,7 +732,7 @@
       "label": "Architecture",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "architecture",
@@ -672,7 +744,7 @@
       "label": "Events",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "events",
@@ -684,31 +756,31 @@
       "label": "Process handling",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "process handling",
       "source_file": "docs/architecture.md",
-      "source_location": "L23"
+      "source_location": "L26"
     },
     {
       "id": "docs_architecture_replay",
       "label": "Replay",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "replay",
       "source_file": "docs/architecture.md",
-      "source_location": "L29"
+      "source_location": "L32"
     },
     {
       "id": "docs_benchmarks",
       "label": "benchmarks.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "benchmarks.md",
@@ -720,7 +792,7 @@
       "label": "Benchmarks: what each number means",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "benchmarks: what each number means",
@@ -732,7 +804,7 @@
       "label": "Falcon-512",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "falcon-512",
@@ -744,7 +816,7 @@
       "label": "Fast prover (season 2)",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "fast prover (season 2)",
@@ -756,7 +828,7 @@
       "label": "Honesty rules",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "honesty rules",
@@ -768,7 +840,7 @@
       "label": "Light prover (season 1)",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "light prover (season 1)",
@@ -780,7 +852,7 @@
       "label": "setup.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "setup.md",
@@ -792,7 +864,7 @@
       "label": "HARNESS_DIR",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "harness_dir",
@@ -800,11 +872,23 @@
       "source_location": "L16"
     },
     {
+      "id": "docs_setup_mainnet_price",
+      "label": "Mainnet price",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "mainnet price",
+      "source_file": "docs/setup.md",
+      "source_location": "L24"
+    },
+    {
       "id": "docs_setup_setup",
       "label": "Setup",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "setup",
@@ -816,7 +900,7 @@
       "label": "Using existing builds",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "using existing builds",
@@ -828,7 +912,7 @@
       "label": "STATUS.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "status.md",
@@ -836,64 +920,124 @@
       "source_location": "L1"
     },
     {
-      "id": "docs_status_open",
-      "label": "OPEN",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Benchmarks: what each number means",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "open",
-      "source_file": "docs/STATUS.md",
-      "source_location": "L20"
-    },
-    {
-      "id": "docs_status_project_index_read_this_before_doing_anything",
-      "label": "Project index: read this before doing anything",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Benchmarks: what each number means",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "project index: read this before doing anything",
-      "source_file": "docs/STATUS.md",
-      "source_location": "L3"
-    },
-    {
-      "id": "docs_status_status_single_source_of_truth",
-      "label": "STATUS (single source of truth)",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Benchmarks: what each number means",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "status (single source of truth)",
-      "source_file": "docs/STATUS.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_status_traps",
-      "label": "Traps",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Benchmarks: what each number means",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "traps",
-      "source_file": "docs/STATUS.md",
-      "source_location": "L31"
-    },
-    {
       "id": "readme",
       "label": "README.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Benchmarks: what each number means",
+      "community_name": "falcon-stwo-race",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "readme.md",
       "source_file": "README.md",
       "source_location": "L1"
+    },
+    {
+      "id": "readme_built_together",
+      "label": "Built together",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "built together",
+      "source_file": "README.md",
+      "source_location": "L66"
+    },
+    {
+      "id": "readme_disclaimer",
+      "label": "Disclaimer",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "disclaimer",
+      "source_file": "README.md",
+      "source_location": "L76"
+    },
+    {
+      "id": "readme_falcon_stwo_race",
+      "label": "falcon-stwo-race",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "falcon-stwo-race",
+      "source_file": "README.md",
+      "source_location": "L3"
+    },
+    {
+      "id": "readme_how_it_works",
+      "label": "How it works",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "how it works",
+      "source_file": "README.md",
+      "source_location": "L50"
+    },
+    {
+      "id": "readme_license",
+      "label": "License",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "license",
+      "source_file": "README.md",
+      "source_location": "L80"
+    },
+    {
+      "id": "readme_run_it",
+      "label": "Run it",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "run it",
+      "source_file": "README.md",
+      "source_location": "L40"
+    },
+    {
+      "id": "readme_status",
+      "label": "Status",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "status",
+      "source_file": "README.md",
+      "source_location": "L72"
+    },
+    {
+      "id": "readme_the_three_races",
+      "label": "The three races",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "the three races",
+      "source_file": "README.md",
+      "source_location": "L18"
+    },
+    {
+      "id": "readme_why",
+      "label": "Why",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "falcon-stwo-race",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "why",
+      "source_file": "README.md",
+      "source_location": "L12"
     },
     {
       "id": "web_app",
@@ -926,7 +1070,7 @@
       "file_type": "code",
       "norm_label": "pending",
       "source_file": "web/app.js",
-      "source_location": "L282"
+      "source_location": "L321"
     },
     {
       "id": "web_app_state",
@@ -961,7 +1105,19 @@
       "node_kind": "heading",
       "norm_label": "2026-10-19: fit-to-screen view and built-on logos",
       "source_file": "docs/STATUS-archive.md",
-      "source_location": "L7"
+      "source_location": "L12"
+    },
+    {
+      "id": "docs_status_archive_2026_10_19_mainnet_price_in_the_falcon_card_quieter_design",
+      "label": "2026-10-19: Mainnet price in the Falcon card, quieter design",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "STATUS archive (append-only, newest first)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "2026-10-19: mainnet price in the falcon card, quieter design",
+      "source_file": "docs/STATUS-archive.md",
+      "source_location": "L3"
     },
     {
       "id": "docs_status_archive_2026_10_19_one_screen_layout",
@@ -973,7 +1129,7 @@
       "node_kind": "heading",
       "norm_label": "2026-10-19: one-screen layout",
       "source_file": "docs/STATUS-archive.md",
-      "source_location": "L3"
+      "source_location": "L8"
     },
     {
       "id": "docs_status_archive_2026_10_19_phase_1_done",
@@ -985,7 +1141,7 @@
       "node_kind": "heading",
       "norm_label": "2026-10-19: phase 1 done",
       "source_file": "docs/STATUS-archive.md",
-      "source_location": "L12"
+      "source_location": "L17"
     },
     {
       "id": "docs_status_archive_status_archive_append_only_newest_first",
@@ -1192,6 +1348,17 @@
       "source_location": "L1"
     },
     {
+      "id": "server_race_rationale_60",
+      "label": "(VmRSS, VmHWM) in bytes for a live process, or (0, 0) once it is gone.",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "read_status",
+      "file_type": "rationale",
+      "norm_label": "(vmrss, vmhwm) in bytes for a live process, or (0, 0) once it is gone.",
+      "source_file": "server/race.py",
+      "source_location": "L60"
+    },
+    {
       "id": "scripts_fetch_contributors",
       "label": "fetch_contributors.py",
       "_origin": "ast",
@@ -1258,7 +1425,7 @@
       "source_location": "L1"
     },
     {
-      "id": "server_race_rationale_36",
+      "id": "server_race_rationale_37",
       "label": "races.json, with paths taken from config.local.json when present (see\u2026",
       "_origin": "ast",
       "community": 2,
@@ -1266,137 +1433,161 @@
       "file_type": "rationale",
       "norm_label": "races.json, with paths taken from config.local.json when present (see...",
       "source_file": "server/race.py",
-      "source_location": "L36"
+      "source_location": "L37"
     },
     {
-      "id": "server_race_rationale_50",
-      "label": "(VmRSS, VmHWM) in bytes for a live process, or (0, 0) once it is gone.",
+      "id": "server_race_rationale_47",
+      "label": "The live mainnet price needs node, the private .env, the CLI and both built\u2026",
       "_origin": "ast",
       "community": 2,
       "community_name": "race.py",
       "file_type": "rationale",
-      "norm_label": "(vmrss, vmhwm) in bytes for a live process, or (0, 0) once it is gone.",
+      "norm_label": "the live mainnet price needs node, the private .env, the cli and both built...",
       "source_file": "server/race.py",
-      "source_location": "L50"
+      "source_location": "L47"
     },
     {
-      "id": "server_race_rationale_71",
-      "label": "Two equal halves of the usable CPUs. On hybrid CPUs (performance + efficiency\u2026",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "race.py",
-      "file_type": "rationale",
-      "norm_label": "two equal halves of the usable cpus. on hybrid cpus (performance + efficiency...",
-      "source_file": "server/race.py",
-      "source_location": "L71"
-    },
-    {
-      "id": "readme_built_together",
-      "label": "Built together",
+      "id": "server_mainnet_sim",
+      "label": "mainnet_sim.mjs",
       "_origin": "ast",
       "community": 3,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "built together",
-      "source_file": "README.md",
-      "source_location": "L64"
+      "community_name": "mainnet_sim.mjs",
+      "file_type": "code",
+      "norm_label": "mainnet_sim.mjs",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L1"
     },
     {
-      "id": "readme_disclaimer",
-      "label": "Disclaimer",
+      "id": "server_mainnet_sim_bounds",
+      "label": "bounds",
       "_origin": "ast",
       "community": 3,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "disclaimer",
-      "source_file": "README.md",
-      "source_location": "L74"
+      "community_name": "mainnet_sim.mjs",
+      "file_type": "code",
+      "norm_label": "bounds",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L46"
     },
     {
-      "id": "readme_falcon_stwo_race",
-      "label": "falcon-stwo-race",
+      "id": "server_mainnet_sim_cfg",
+      "label": "cfg",
       "_origin": "ast",
       "community": 3,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "falcon-stwo-race",
-      "source_file": "README.md",
-      "source_location": "L3"
+      "community_name": "mainnet_sim.mjs",
+      "file_type": "code",
+      "norm_label": "cfg",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L32"
     },
     {
-      "id": "readme_how_it_works",
-      "label": "How it works",
+      "id": "server_mainnet_sim_common",
+      "label": "common",
       "_origin": "ast",
       "community": 3,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "how it works",
-      "source_file": "README.md",
-      "source_location": "L48"
+      "community_name": "mainnet_sim.mjs",
+      "file_type": "code",
+      "norm_label": "common",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L51"
     },
     {
-      "id": "readme_license",
-      "label": "License",
+      "id": "server_mainnet_sim_constructorcalldata",
+      "label": "constructorCalldata",
       "_origin": "ast",
       "community": 3,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "license",
-      "source_file": "README.md",
-      "source_location": "L78"
+      "community_name": "mainnet_sim.mjs",
+      "file_type": "code",
+      "norm_label": "constructorcalldata",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L58"
     },
     {
-      "id": "readme_run_it",
-      "label": "Run it",
+      "id": "server_mainnet_sim_env",
+      "label": "env",
       "_origin": "ast",
       "community": 3,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "run it",
-      "source_file": "README.md",
+      "community_name": "mainnet_sim.mjs",
+      "file_type": "code",
+      "norm_label": "env",
+      "source_file": "server/mainnet_sim.mjs",
       "source_location": "L38"
     },
     {
-      "id": "readme_status",
-      "label": "Status",
+      "id": "server_mainnet_sim_funder",
+      "label": "funder",
       "_origin": "ast",
       "community": 3,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "status",
-      "source_file": "README.md",
-      "source_location": "L70"
+      "community_name": "mainnet_sim.mjs",
+      "file_type": "code",
+      "norm_label": "funder",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L54"
     },
     {
-      "id": "readme_the_three_races",
-      "label": "The three races",
+      "id": "server_mainnet_sim_fundernonce",
+      "label": "funderNonce",
       "_origin": "ast",
       "community": 3,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "the three races",
-      "source_file": "README.md",
-      "source_location": "L18"
+      "community_name": "mainnet_sim.mjs",
+      "file_type": "code",
+      "norm_label": "fundernonce",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L55"
     },
     {
-      "id": "readme_why",
-      "label": "Why",
+      "id": "server_mainnet_sim_material",
+      "label": "material",
       "_origin": "ast",
       "community": 3,
-      "community_name": "falcon-stwo-race",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "why",
-      "source_file": "README.md",
-      "source_location": "L12"
+      "community_name": "mainnet_sim.mjs",
+      "file_type": "code",
+      "norm_label": "material",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L57"
+    },
+    {
+      "id": "server_mainnet_sim_out",
+      "label": "out",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "mainnet_sim.mjs",
+      "file_type": "code",
+      "norm_label": "out",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L61"
+    },
+    {
+      "id": "server_mainnet_sim_prices",
+      "label": "prices",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "mainnet_sim.mjs",
+      "file_type": "code",
+      "norm_label": "prices",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L45"
+    },
+    {
+      "id": "server_mainnet_sim_provider",
+      "label": "provider",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "mainnet_sim.mjs",
+      "file_type": "code",
+      "norm_label": "provider",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L41"
+    },
+    {
+      "id": "server_mainnet_sim_scheme",
+      "label": "scheme",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "mainnet_sim.mjs",
+      "file_type": "code",
+      "norm_label": "scheme",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L56"
     },
     {
       "id": "emit",
@@ -1432,7 +1623,7 @@
       "source_location": ""
     },
     {
-      "id": "server_race_rationale_138",
+      "id": "server_race_rationale_148",
       "label": "One run of one or more lanes. `cancel()` kills every process it started or is\u2026",
       "_origin": "ast",
       "community": 4,
@@ -1440,10 +1631,10 @@
       "file_type": "rationale",
       "norm_label": "one run of one or more lanes. `cancel()` kills every process it started or is...",
       "source_file": "server/race.py",
-      "source_location": "L138"
+      "source_location": "L148"
     },
     {
-      "id": "server_race_rationale_179",
+      "id": "server_race_rationale_189",
       "label": "Reap the side if it exited: exact end time and the kernel's peak RSS\u2026",
       "_origin": "ast",
       "community": 4,
@@ -1451,10 +1642,10 @@
       "file_type": "rationale",
       "norm_label": "reap the side if it exited: exact end time and the kernel's peak rss...",
       "source_file": "server/race.py",
-      "source_location": "L179"
+      "source_location": "L189"
     },
     {
-      "id": "server_race_rationale_195",
+      "id": "server_race_rationale_205",
       "label": "Poll until every side exits, streaming elapsed time and memory.",
       "_origin": "ast",
       "community": 4,
@@ -1462,32 +1653,21 @@
       "file_type": "rationale",
       "norm_label": "poll until every side exits, streaming elapsed time and memory.",
       "source_file": "server/race.py",
-      "source_location": "L195"
+      "source_location": "L205"
     },
     {
-      "id": "server_race_rationale_299",
-      "label": "Kill this race's processes without cancelling the race (a lane failed; later\u2026",
+      "id": "server_race_rationale_293",
+      "label": "Price one Falcon-signed transaction of each account on mainnet, by simulation\u2026",
       "_origin": "ast",
       "community": 4,
       "community_name": "Race",
       "file_type": "rationale",
-      "norm_label": "kill this race's processes without cancelling the race (a lane failed; later...",
+      "norm_label": "price one falcon-signed transaction of each account on mainnet, by simulation...",
       "source_file": "server/race.py",
-      "source_location": "L299"
+      "source_location": "L293"
     },
     {
-      "id": "server_race_rationale_310",
-      "label": "Run a race in a thread and yield its events; closing the generator cancels the\u2026",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Race",
-      "file_type": "rationale",
-      "norm_label": "run a race in a thread and yield its events; closing the generator cancels the...",
-      "source_file": "server/race.py",
-      "source_location": "L310"
-    },
-    {
-      "id": "server_race_rationale_32",
+      "id": "server_race_rationale_33",
       "label": "A lane cannot run (missing build, failed spawn); reported to the UI as the\u2026",
       "_origin": "ast",
       "community": 4,
@@ -1495,7 +1675,29 @@
       "file_type": "rationale",
       "norm_label": "a lane cannot run (missing build, failed spawn); reported to the ui as the...",
       "source_file": "server/race.py",
-      "source_location": "L32"
+      "source_location": "L33"
+    },
+    {
+      "id": "server_race_rationale_336",
+      "label": "Kill this race's processes without cancelling the race (a lane failed; later\u2026",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Race",
+      "file_type": "rationale",
+      "norm_label": "kill this race's processes without cancelling the race (a lane failed; later...",
+      "source_file": "server/race.py",
+      "source_location": "L336"
+    },
+    {
+      "id": "server_race_rationale_347",
+      "label": "Run a race in a thread and yield its events; closing the generator cancels the\u2026",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Race",
+      "file_type": "rationale",
+      "norm_label": "run a race in a thread and yield its events; closing the generator cancels the...",
+      "source_file": "server/race.py",
+      "source_location": "L347"
     },
     {
       "id": "basehttprequesthandler",
@@ -1520,7 +1722,7 @@
       "source_location": ""
     },
     {
-      "id": "server_app_rationale_52",
+      "id": "server_app_rationale_79",
       "label": "Only this machine's own page may use the API: the Host must be loopback (no DNS\u2026",
       "_origin": "ast",
       "community": 5,
@@ -1528,7 +1730,7 @@
       "file_type": "rationale",
       "norm_label": "only this machine's own page may use the api: the host must be loopback (no dns...",
       "source_file": "server/app.py",
-      "source_location": "L52"
+      "source_location": "L79"
     },
     {
       "id": "claude",
@@ -1625,6 +1827,65 @@
       "norm_label": "start here",
       "source_file": "CLAUDE.md",
       "source_location": "L5"
+    },
+    {
+      "id": "docs_status_open",
+      "label": "OPEN",
+      "_origin": "ast",
+      "community": 7,
+      "community_name": "cpu_halves",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "open",
+      "source_file": "docs/STATUS.md",
+      "source_location": "L20"
+    },
+    {
+      "id": "docs_status_project_index_read_this_before_doing_anything",
+      "label": "Project index: read this before doing anything",
+      "_origin": "ast",
+      "community": 7,
+      "community_name": "cpu_halves",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "project index: read this before doing anything",
+      "source_file": "docs/STATUS.md",
+      "source_location": "L3"
+    },
+    {
+      "id": "docs_status_status_single_source_of_truth",
+      "label": "STATUS (single source of truth)",
+      "_origin": "ast",
+      "community": 7,
+      "community_name": "cpu_halves",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "status (single source of truth)",
+      "source_file": "docs/STATUS.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_status_traps",
+      "label": "Traps",
+      "_origin": "ast",
+      "community": 7,
+      "community_name": "cpu_halves",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "traps",
+      "source_file": "docs/STATUS.md",
+      "source_location": "L32"
+    },
+    {
+      "id": "server_race_rationale_81",
+      "label": "Two equal halves of the usable CPUs. On hybrid CPUs (performance + efficiency\u2026",
+      "_origin": "ast",
+      "community": 7,
+      "community_name": "cpu_halves",
+      "file_type": "rationale",
+      "norm_label": "two equal halves of the usable cpus. on hybrid cpus (performance + efficiency...",
+      "source_file": "server/race.py",
+      "source_location": "L81"
     },
     {
       "id": "scripts_setup",
@@ -2000,6 +2261,28 @@
       "norm_label": "urllib_request",
       "source_file": "",
       "type": "external"
+    },
+    {
+      "id": "ref_node_crypto",
+      "label": "ref_node_crypto",
+      "community": 3,
+      "community_name": "mainnet_sim.mjs",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ref_node_crypto",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "ref_node_fs",
+      "label": "ref_node_fs",
+      "community": 3,
+      "community_name": "mainnet_sim.mjs",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ref_node_fs",
+      "source_file": "",
+      "type": "external"
     }
   ],
   "links": [
@@ -2101,30 +2384,6 @@
     },
     {
       "source": "server_app_handler_do_get",
-      "target": "server_app_handler_local",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "server/app.py",
-      "source_location": "L64",
-      "weight": 1.0
-    },
-    {
-      "source": "server_app_handler_do_get",
-      "target": "server_app_handler_json",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "server/app.py",
-      "source_location": "L65",
-      "weight": 1.0
-    },
-    {
-      "source": "server_app_handler_do_get",
       "target": "server_app_handler_race",
       "relation": "calls",
       "_origin": "ast",
@@ -2132,7 +2391,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/app.py",
-      "source_location": "L78",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -2144,7 +2403,43 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/app.py",
-      "source_location": "L80",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "server_app_handler_do_get",
+      "target": "server_app_handler_local",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "server/app.py",
+      "source_location": "L91",
+      "weight": 1.0
+    },
+    {
+      "source": "server_app_handler_do_get",
+      "target": "server_app_handler_json",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "server/app.py",
+      "source_location": "L92",
+      "weight": 1.0
+    },
+    {
+      "source": "server_app_handler_do_get",
+      "target": "server_app_strk_usd",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "server/app.py",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
@@ -2156,7 +2451,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/app.py",
-      "source_location": "L88",
+      "source_location": "L118",
       "weight": 1.0
     },
     {
@@ -2168,7 +2463,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/app.py",
-      "source_location": "L114",
+      "source_location": "L144",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race_cpu_halves",
+      "target": "server_race_laneerror",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "server/race.py",
+      "source_location": "L100",
       "weight": 1.0
     },
     {
@@ -2180,19 +2487,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L78",
-      "weight": 1.0
-    },
-    {
-      "source": "server_race_cpu_halves",
-      "target": "server_race_laneerror",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "server/race.py",
-      "source_location": "L90",
+      "source_location": "L88",
       "weight": 1.0
     },
     {
@@ -2204,7 +2499,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L114",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
@@ -2216,7 +2511,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L176",
+      "source_location": "L186",
       "weight": 1.0
     },
     {
@@ -2228,7 +2523,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L304",
+      "source_location": "L341",
       "weight": 1.0
     },
     {
@@ -2240,7 +2535,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L267",
+      "source_location": "L277",
       "weight": 1.0
     },
     {
@@ -2252,7 +2547,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L269",
+      "source_location": "L279",
       "weight": 1.0
     },
     {
@@ -2264,7 +2559,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L270",
+      "source_location": "L280",
       "weight": 1.0
     },
     {
@@ -2276,7 +2571,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L272",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -2288,7 +2583,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L274",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
@@ -2300,7 +2595,79 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L275",
+      "source_location": "L285",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race_race_falcon_lane",
+      "target": "server_race_race_mainnet_price",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "server/race.py",
+      "source_location": "L290",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race_race_mainnet_price",
+      "target": "server_race_mainnet_ready",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "server/race.py",
+      "source_location": "L298",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race_race_mainnet_price",
+      "target": "server_race_stream_emit",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "server/race.py",
+      "source_location": "L299",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race_race_mainnet_price",
+      "target": "server_race_side",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "server/race.py",
+      "source_location": "L304",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race_race_mainnet_price",
+      "target": "server_race_race_spawn",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "server/race.py",
+      "source_location": "L305",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race_race_mainnet_price",
+      "target": "server_race_kill",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "server/race.py",
+      "source_location": "L309",
       "weight": 1.0
     },
     {
@@ -2312,7 +2679,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L217",
+      "source_location": "L227",
       "weight": 1.0
     },
     {
@@ -2324,7 +2691,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L223",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -2336,7 +2703,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L223",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -2348,7 +2715,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L229",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -2360,7 +2727,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L234",
+      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -2372,7 +2739,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L238",
+      "source_location": "L248",
       "weight": 1.0
     },
     {
@@ -2384,7 +2751,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L241",
+      "source_location": "L251",
       "weight": 1.0
     },
     {
@@ -2396,7 +2763,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L242",
+      "source_location": "L252",
       "weight": 1.0
     },
     {
@@ -2408,7 +2775,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L256",
+      "source_location": "L266",
       "weight": 1.0
     },
     {
@@ -2420,7 +2787,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L290",
+      "source_location": "L327",
       "weight": 1.0
     },
     {
@@ -2432,7 +2799,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L292",
+      "source_location": "L329",
       "weight": 1.0
     },
     {
@@ -2444,7 +2811,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L151",
+      "source_location": "L161",
       "weight": 1.0
     },
     {
@@ -2456,7 +2823,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L199",
+      "source_location": "L209",
       "weight": 1.0
     },
     {
@@ -2468,7 +2835,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L200",
+      "source_location": "L210",
       "weight": 1.0
     },
     {
@@ -2480,7 +2847,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L202",
+      "source_location": "L212",
       "weight": 1.0
     },
     {
@@ -2492,7 +2859,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L317",
+      "source_location": "L354",
       "weight": 1.0
     },
     {
@@ -2504,7 +2871,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L303",
+      "source_location": "L342",
       "weight": 1.0
     },
     {
@@ -2516,7 +2883,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L307",
+      "source_location": "L346",
       "weight": 1.0
     },
     {
@@ -2528,7 +2895,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L176",
+      "source_location": "L181",
       "weight": 1.0
     },
     {
@@ -2540,7 +2907,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L181",
+      "source_location": "L186",
       "weight": 1.0
     },
     {
@@ -2552,7 +2919,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L184",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
@@ -2564,7 +2931,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L186",
+      "source_location": "L191",
       "weight": 1.0
     },
     {
@@ -2576,7 +2943,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L193",
+      "source_location": "L198",
       "weight": 1.0
     },
     {
@@ -2588,7 +2955,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L211",
+      "source_location": "L216",
       "weight": 1.0
     },
     {
@@ -2600,7 +2967,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L230",
+      "source_location": "L235",
+      "weight": 1.0
+    },
+    {
+      "source": "web_app_handle",
+      "target": "web_app_mainnet",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "web/app.js",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -2612,7 +2991,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L238",
+      "source_location": "L247",
       "weight": 1.0
     },
     {
@@ -2653,6 +3032,18 @@
     },
     {
       "source": "web_app_init",
+      "target": "web_app_mainnet",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "web/app.js",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "web_app_init",
       "target": "web_app_replay",
       "relation": "calls",
       "_origin": "ast",
@@ -2660,7 +3051,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -2672,7 +3063,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L53",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -2684,7 +3075,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L54",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -2696,7 +3087,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L73",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -2708,7 +3099,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L78",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "web_app_replay",
+      "target": "web_app_mainnet",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "web/app.js",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -2720,7 +3123,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L82",
+      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -2732,7 +3135,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L157",
+      "source_location": "L161",
       "weight": 1.0
     },
     {
@@ -2744,7 +3147,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L160",
+      "source_location": "L164",
       "weight": 1.0
     },
     {
@@ -2756,7 +3159,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L165",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -2768,7 +3171,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L286",
+      "source_location": "L325",
       "weight": 1.0
     },
     {
@@ -2780,7 +3183,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L170",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
@@ -2792,7 +3195,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L107",
+      "source_location": "L109",
       "weight": 1.0
     },
     {
@@ -2804,7 +3207,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L120",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -2816,7 +3219,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L123",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -2828,7 +3231,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L125",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -2840,7 +3243,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L132",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -2852,7 +3255,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L133",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -2864,7 +3267,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L134",
+      "source_location": "L137",
       "weight": 1.0
     },
     {
@@ -2876,7 +3279,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L144",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
@@ -2888,7 +3291,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L102",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -2900,7 +3303,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "web/app.js",
-      "source_location": "L102",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -2912,7 +3315,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/race.py",
-      "source_location": "L55",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -2924,7 +3327,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "server/race.py",
-      "source_location": "L194",
+      "source_location": "L204",
       "weight": 1.0
     },
     {
@@ -2989,6 +3392,30 @@
     },
     {
       "source": "server_app",
+      "target": "time",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "server/app.py",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "server_app",
+      "target": "urllib_request",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "server/app.py",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "server_app",
       "target": "server_race",
       "relation": "imports",
       "_origin": "ast",
@@ -2996,7 +3423,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "server/app.py",
-      "source_location": "L18",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -3176,7 +3603,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "server/app.py",
-      "source_location": "L12",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -3188,7 +3615,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "server/app.py",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -3200,7 +3627,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "server/app.py",
-      "source_location": "L14",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -3212,6 +3639,30 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "server/app.py",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "server_mainnet_sim",
+      "target": "ref_node_fs",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "server_mainnet_sim",
+      "target": "ref_node_crypto",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "server/mainnet_sim.mjs",
       "source_location": "L15",
       "weight": 1.0
     },
@@ -3260,7 +3711,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "server/app.py",
-      "source_location": "L30",
+      "source_location": "L57",
       "weight": 1.0
     },
     {
@@ -3272,7 +3723,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "server/race.py",
-      "source_location": "L99",
+      "source_location": "L109",
       "weight": 1.0
     },
     {
@@ -3284,7 +3735,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "server/race.py",
-      "source_location": "L140",
+      "source_location": "L150",
       "weight": 1.0
     },
     {
@@ -3296,7 +3747,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "server/race.py",
-      "source_location": "L178",
+      "source_location": "L188",
       "weight": 1.0
     },
     {
@@ -3308,7 +3759,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "server/race.py",
-      "source_location": "L149",
+      "source_location": "L159",
       "weight": 1.0
     },
     {
@@ -3484,7 +3935,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/architecture.md",
-      "source_location": "L23",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -3495,7 +3946,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/architecture.md",
-      "source_location": "L29",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -3587,6 +4038,17 @@
       "weight": 1.0
     },
     {
+      "source": "docs_setup_setup",
+      "target": "docs_setup_mainnet_price",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/setup.md",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
       "source": "docs_status",
       "target": "docs_status_status_single_source_of_truth",
       "relation": "contains",
@@ -3610,7 +4072,7 @@
     },
     {
       "source": "docs_status_archive_status_archive_append_only_newest_first",
-      "target": "docs_status_archive_2026_10_19_phase_1_done",
+      "target": "docs_status_archive_2026_10_19_fit_to_screen_view_and_built_on_logos",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -3621,7 +4083,18 @@
     },
     {
       "source": "docs_status_archive_status_archive_append_only_newest_first",
-      "target": "docs_status_archive_2026_10_19_one_screen_layout",
+      "target": "docs_status_archive_2026_10_19_phase_1_done",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/STATUS-archive.md",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_status_archive_status_archive_append_only_newest_first",
+      "target": "docs_status_archive_2026_10_19_mainnet_price_in_the_falcon_card_quieter_design",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -3632,13 +4105,13 @@
     },
     {
       "source": "docs_status_archive_status_archive_append_only_newest_first",
-      "target": "docs_status_archive_2026_10_19_fit_to_screen_view_and_built_on_logos",
+      "target": "docs_status_archive_2026_10_19_one_screen_layout",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/STATUS-archive.md",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -3671,7 +4144,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/STATUS.md",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -3715,7 +4188,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L38",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
@@ -3726,7 +4199,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L48",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -3737,7 +4210,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L64",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -3748,7 +4221,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L70",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -3759,7 +4232,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L74",
+      "source_location": "L76",
       "weight": 1.0
     },
     {
@@ -3770,7 +4243,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L78",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -3814,7 +4287,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/app.py",
-      "source_location": "L112",
+      "source_location": "L142",
+      "weight": 1.0
+    },
+    {
+      "source": "server_app",
+      "target": "server_app_strk_usd",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/app.py",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -3825,117 +4309,161 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/app.py",
-      "source_location": "L24",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
-      "source": "server_race",
-      "target": "server_race_kill_all",
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_shakeblocks",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "server/race.py",
-      "source_location": "L110",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
-      "source": "server_race",
-      "target": "server_race_side",
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_cfg",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "server/race.py",
-      "source_location": "L121",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
-      "source": "server_race",
-      "target": "server_race_race",
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_env",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "server/race.py",
-      "source_location": "L137",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
-      "source": "server_race",
-      "target": "server_race_stream",
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_provider",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "server/race.py",
-      "source_location": "L309",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L41",
       "weight": 1.0
     },
     {
-      "source": "server_race",
-      "target": "server_race_laneerror",
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_fri",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "server/race.py",
-      "source_location": "L31",
-      "weight": 1.0
-    },
-    {
-      "source": "server_race",
-      "target": "server_race_load_config",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "server/race.py",
-      "source_location": "L35",
-      "weight": 1.0
-    },
-    {
-      "source": "server_race",
-      "target": "server_race_expand",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "server/race.py",
+      "source_file": "server/mainnet_sim.mjs",
       "source_location": "L44",
       "weight": 1.0
     },
     {
-      "source": "server_race",
-      "target": "server_race_read_status",
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_prices",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "server/race.py",
-      "source_location": "L49",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
-      "source": "server_race",
-      "target": "server_race_parse_cpulist",
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_bounds",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "server/race.py",
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_common",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_funder",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_fundernonce",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_scheme",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L56",
+      "weight": 1.0
+    },
+    {
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_material",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L57",
+      "weight": 1.0
+    },
+    {
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_constructorcalldata",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/mainnet_sim.mjs",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "server_mainnet_sim",
+      "target": "server_mainnet_sim_out",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/mainnet_sim.mjs",
       "source_location": "L61",
-      "weight": 1.0
-    },
-    {
-      "source": "server_race",
-      "target": "server_race_cpu_halves",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "server/race.py",
-      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -3946,7 +4474,128 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L99",
+      "source_location": "L109",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race",
+      "target": "server_race_kill_all",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L120",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race",
+      "target": "server_race_side",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L131",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race",
+      "target": "server_race_race",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L147",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race",
+      "target": "server_race_laneerror",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L32",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race",
+      "target": "server_race_stream",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L346",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race",
+      "target": "server_race_load_config",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race",
+      "target": "server_race_mainnet_ready",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race",
+      "target": "server_race_expand",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race",
+      "target": "server_race_read_status",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L59",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race",
+      "target": "server_race_parse_cpulist",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race",
+      "target": "server_race_cpu_halves",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -3957,7 +4606,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L102",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -3968,7 +4617,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L104",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -3979,7 +4628,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L110",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -3990,7 +4639,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L118",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -4001,18 +4650,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L137",
-      "weight": 1.0
-    },
-    {
-      "source": "web_app",
-      "target": "web_app_reset",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "web/app.js",
-      "source_location": "L149",
+      "source_location": "L140",
       "weight": 1.0
     },
     {
@@ -4028,13 +4666,24 @@
     },
     {
       "source": "web_app",
+      "target": "web_app_reset",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "web/app.js",
+      "source_location": "L153",
+      "weight": 1.0
+    },
+    {
+      "source": "web_app",
       "target": "web_app_sideel",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L168",
+      "source_location": "L173",
       "weight": 1.0
     },
     {
@@ -4045,7 +4694,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L169",
+      "source_location": "L174",
       "weight": 1.0
     },
     {
@@ -4056,7 +4705,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L175",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -4067,23 +4716,12 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L252",
+      "source_location": "L261",
       "weight": 1.0
     },
     {
       "source": "web_app",
-      "target": "web_app_countup",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "web/app.js",
-      "source_location": "L272",
-      "weight": 1.0
-    },
-    {
-      "source": "web_app",
-      "target": "web_app_pending",
+      "target": "web_app_mainnet",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -4094,13 +4732,35 @@
     },
     {
       "source": "web_app",
+      "target": "web_app_countup",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "web/app.js",
+      "source_location": "L311",
+      "weight": 1.0
+    },
+    {
+      "source": "web_app",
+      "target": "web_app_pending",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "web/app.js",
+      "source_location": "L321",
+      "weight": 1.0
+    },
+    {
+      "source": "web_app",
       "target": "web_app_schedule",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L283",
+      "source_location": "L322",
       "weight": 1.0
     },
     {
@@ -4111,7 +4771,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L289",
+      "source_location": "L328",
       "weight": 1.0
     },
     {
@@ -4122,7 +4782,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L340",
+      "source_location": "L379",
       "weight": 1.0
     },
     {
@@ -4133,7 +4793,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L346",
+      "source_location": "L385",
       "weight": 1.0
     },
     {
@@ -4166,7 +4826,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L64",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -4188,7 +4848,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L89",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -4199,7 +4859,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/app.js",
-      "source_location": "L96",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -4265,7 +4925,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/app.py",
-      "source_location": "L24",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -4276,62 +4936,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L31",
-      "weight": 1.0
-    },
-    {
-      "source": "server_app_handler",
-      "target": "server_app_handler_log_message",
-      "relation": "method",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "server/app.py",
-      "source_location": "L27",
-      "weight": 1.0
-    },
-    {
-      "source": "server_app_handler",
-      "target": "server_app_handler_json",
-      "relation": "method",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "server/app.py",
-      "source_location": "L30",
-      "weight": 1.0
-    },
-    {
-      "source": "server_app_handler",
-      "target": "server_app_handler_static",
-      "relation": "method",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "server/app.py",
-      "source_location": "L38",
-      "weight": 1.0
-    },
-    {
-      "source": "server_app_handler",
-      "target": "server_app_handler_local",
-      "relation": "method",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "server/app.py",
-      "source_location": "L51",
-      "weight": 1.0
-    },
-    {
-      "source": "server_app_handler",
-      "target": "server_app_handler_do_get",
-      "relation": "method",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "server/app.py",
-      "source_location": "L62",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -4342,7 +4947,62 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/app.py",
-      "source_location": "L82",
+      "source_location": "L112",
+      "weight": 1.0
+    },
+    {
+      "source": "server_app_handler",
+      "target": "server_app_handler_log_message",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/app.py",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "server_app_handler",
+      "target": "server_app_handler_json",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/app.py",
+      "source_location": "L57",
+      "weight": 1.0
+    },
+    {
+      "source": "server_app_handler",
+      "target": "server_app_handler_static",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/app.py",
+      "source_location": "L65",
+      "weight": 1.0
+    },
+    {
+      "source": "server_app_handler",
+      "target": "server_app_handler_local",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/app.py",
+      "source_location": "L78",
+      "weight": 1.0
+    },
+    {
+      "source": "server_app_handler",
+      "target": "server_app_handler_do_get",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/app.py",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -4353,7 +5013,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L140",
+      "source_location": "L150",
       "weight": 1.0
     },
     {
@@ -4364,7 +5024,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L149",
+      "source_location": "L159",
       "weight": 1.0
     },
     {
@@ -4375,7 +5035,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L170",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -4386,7 +5046,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L178",
+      "source_location": "L188",
       "weight": 1.0
     },
     {
@@ -4397,7 +5057,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L194",
+      "source_location": "L204",
       "weight": 1.0
     },
     {
@@ -4408,7 +5068,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L214",
+      "source_location": "L224",
       "weight": 1.0
     },
     {
@@ -4419,7 +5079,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L220",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -4430,7 +5090,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L263",
+      "source_location": "L273",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race_race",
+      "target": "server_race_race_mainnet_price",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L292",
       "weight": 1.0
     },
     {
@@ -4441,7 +5112,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L281",
+      "source_location": "L318",
       "weight": 1.0
     },
     {
@@ -4452,7 +5123,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L298",
+      "source_location": "L335",
       "weight": 1.0
     },
     {
@@ -4478,14 +5149,14 @@
       "weight": 1.0
     },
     {
-      "source": "server_app_rationale_52",
+      "source": "server_app_rationale_79",
       "target": "server_app_handler_local",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/app.py",
-      "source_location": "L52",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -4500,102 +5171,124 @@
       "weight": 1.0
     },
     {
-      "source": "server_race_rationale_138",
+      "source": "server_race_rationale_148",
       "target": "server_race_race",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L138",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
-      "source": "server_race_rationale_179",
+      "source": "server_race_rationale_189",
       "target": "server_race_race_reap",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L179",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
-      "source": "server_race_rationale_195",
+      "source": "server_race_rationale_205",
       "target": "server_race_race_watch",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L195",
+      "source_location": "L205",
       "weight": 1.0
     },
     {
-      "source": "server_race_rationale_299",
-      "target": "server_race_race_cancel_lane",
+      "source": "server_race_rationale_293",
+      "target": "server_race_race_mainnet_price",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L299",
+      "source_location": "L293",
       "weight": 1.0
     },
     {
-      "source": "server_race_rationale_310",
-      "target": "server_race_stream",
-      "relation": "rationale_for",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "server/race.py",
-      "source_location": "L310",
-      "weight": 1.0
-    },
-    {
-      "source": "server_race_rationale_32",
+      "source": "server_race_rationale_33",
       "target": "server_race_laneerror",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L32",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
-      "source": "server_race_rationale_36",
+      "source": "server_race_rationale_336",
+      "target": "server_race_race_cancel_lane",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L336",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race_rationale_347",
+      "target": "server_race_stream",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L347",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race_rationale_37",
       "target": "server_race_load_config",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
-      "source": "server_race_rationale_50",
+      "source": "server_race_rationale_47",
+      "target": "server_race_mainnet_ready",
+      "relation": "rationale_for",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/race.py",
+      "source_location": "L47",
+      "weight": 1.0
+    },
+    {
+      "source": "server_race_rationale_60",
       "target": "server_race_read_status",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L50",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
-      "source": "server_race_rationale_71",
+      "source": "server_race_rationale_81",
       "target": "server_race_cpu_halves",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/race.py",
-      "source_location": "L71",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -4606,7 +5299,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L46",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -4617,7 +5310,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L62",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -4628,7 +5321,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L62",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -4639,7 +5332,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "README.md",
-      "source_location": "L72",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -4651,7 +5344,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "server/race.py",
-      "source_location": "L317",
+      "source_location": "L354",
       "weight": 1.0
     },
     {
@@ -4663,7 +5356,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "web/app.js",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -4675,10 +5368,34 @@
       "confidence_score": 0.95,
       "context": "cpu_halves",
       "source_file": "docs/STATUS.md",
-      "source_location": "L33",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_architecture_events",
+      "target": "web_app_mainnet",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "context": "mainnet",
+      "source_file": "docs/architecture.md",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_setup_mainnet_price",
+      "target": "web_app_mainnet",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "context": "mainnet",
+      "source_file": "docs/setup.md",
+      "source_location": "L26",
       "weight": 1.0
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "a4aabfbb2c8b88ceb1d433e5d6e262cbf2dd606b"
+  "built_at_commit": "9ded6edd0b5b0746cc8e92224e90755b2befc6c3"
 }

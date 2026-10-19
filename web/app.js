@@ -25,7 +25,8 @@ async function init() {
     $(".kicker", el).textContent = lane.kicker;
     $(".lane-title", el).textContent = lane.title;
     $(".lane-sub", el).textContent = lane.subtitle;
-    $(".official", el).innerHTML = `${lane.official.text} <a href="${lane.official.source}" target="_blank" rel="noopener">Source</a>, ${lane.official.date}.`;
+    const credit = lane.official.text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/@([\w-]+)/g, '<span class="who">@$1</span>');
+    $(".official", el).innerHTML = `${credit} <a href="${lane.official.source}" target="_blank" rel="noopener">Source</a>, ${lane.official.date}.`;
     const ch = $(".challenge", el);
     ch.href = lane.challenge.url;
     $("span", ch).textContent = lane.challenge.text;
@@ -324,7 +325,7 @@ async function mainnet(ev) {
 function countUp(el, target) {
   const t0 = performance.now(), dur = 1200;
   const step = (now) => {
-    const k = Math.min(1, (now - t0) / dur);
+    const k = Math.max(0, Math.min(1, (now - t0) / dur));
     el.textContent = fmt.gas(Math.round(target * (1 - (1 - k) ** 3)));
     if (k < 1) requestAnimationFrame(step);
   };

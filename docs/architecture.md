@@ -21,6 +21,8 @@ GET /api/race?mode=… (SSE) ────▶   one race at a time (lock) ──�
 | `mainnet` | `lane`, `state` (`running`, `done` with `data`, `recorded`) | mainnet price of one Falcon-signed transaction per account (simulation) |
 | `end` | `cancelled` | race over |
 
+The mainnet simulation starts with the race at `nice 19` and is revealed when the Falcon race ends.
+
 `GET /api/price` returns the live STRK/USD price (`usd`, `source`, `fetched`), cached for 60 s: CoinGecko first, then Binance.
 
 ## Process handling
