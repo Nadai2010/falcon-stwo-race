@@ -20,7 +20,7 @@
       "metric": "time",
       "title": "Fast prover",
       "kicker": "Season 2",
-      "subtitle": "One full Stwo proof of a private transaction at 100 provable bits",
+      "subtitle": "One full proof of a private transaction at 100 provable bits",
       "statement": "s2_statement",
       "original": {
         "label": "Stwo, pinned prover d6276445",
@@ -47,7 +47,7 @@
         ]
       },
       "official": {
-        "text": "Board: the record proves in 0.4992 of the pinned prover's time, on the evaluator's 16-core AVX2 host.",
+        "text": "Board: 0.4992 of the pinned prover's time, 16-core AVX2 host.",
         "source": "https://stwo.provably.fast/",
         "date": "2026-10-18"
       },
@@ -62,7 +62,7 @@
       "metric": "memory",
       "title": "Light prover",
       "kicker": "Season 1",
-      "subtitle": "The same private transaction proved in as little memory as possible",
+      "subtitle": "The same transaction, proved in as little memory as possible",
       "statement": "s1_statement",
       "original": {
         "label": "Stwo, unmodified (dd1787bc)",
@@ -89,7 +89,7 @@
         ]
       },
       "official": {
-        "text": "Board: the first season cut peak memory from 13.9 GiB to 1.04 GiB.",
+        "text": "Board: 13.9 GiB to 1.04 GiB in season 1.",
         "source": "https://stwo.provably.fast/",
         "date": "2026-10-12"
       },
@@ -104,7 +104,7 @@
       "metric": "gas",
       "title": "Quantum-safe signature",
       "kicker": "Falcon-512",
-      "subtitle": "Verifying one standard Falcon-512 signature in a Starknet account, in Sierra gas",
+      "subtitle": "One standard Falcon-512 signature checked by a Starknet account",
       "test": "bench_verify_falcon_512_shake",
       "original": {
         "label": "OpenZeppelin verifier bece5c07",
@@ -115,7 +115,7 @@
         "repo": "falcon_record_repo"
       },
       "official": {
-        "text": "Board: 27,915,721 gas against 48,398,466 (1.73x cheaper), mean over 27 held-out signatures.",
+        "text": "Board: 48.4M to 27.9M gas, mean of 27 held-out signatures.",
         "source": "https://falcon.provably.fast/",
         "date": "2026-10-18"
       },
