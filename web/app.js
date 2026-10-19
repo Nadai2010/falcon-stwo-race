@@ -323,13 +323,15 @@ async function mainnet(ev) {
 }
 
 function countUp(el, target) {
+  // Animated count, then the exact value set once more whatever the frame clock did.
   const t0 = performance.now(), dur = 1200;
-  const step = (now) => {
-    const k = Math.max(0, Math.min(1, (now - t0) / dur));
+  const step = () => {
+    const k = Math.max(0, Math.min(1, (performance.now() - t0) / dur));
     el.textContent = fmt.gas(Math.round(target * (1 - (1 - k) ** 3)));
     if (k < 1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
+  setTimeout(() => { el.textContent = fmt.gas(target); }, dur + 100);
 }
 
 const pending = new Set();

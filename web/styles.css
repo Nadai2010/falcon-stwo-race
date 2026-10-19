@@ -58,7 +58,7 @@ body {
   min-height: 100vh; padding: 0 var(--gutter);
 }
 /* Everything under the header sits in the middle of the remaining height. */
-.stage { align-self: start; padding: 1vh 0 2vh; }
+.stage { align-self: start; padding: clamp(12px, 4vh, 56px) 0 2vh; }
 
 /* Header */
 .top { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 6px; font: 500 13px/1 var(--mono); }
@@ -73,7 +73,7 @@ body {
 .built img { width: 22px; height: 22px; border-radius: 6px; }
 
 /* Title row */
-.hero { padding: 10px 0 30px; }
+.hero { padding: 0 0 clamp(28px, 5.5vh, 72px); }
 .eyebrow { font: 400 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin: 0 0 6px; }
 h1 { font: 900 clamp(40px, 4.4vw, 76px)/0.9 var(--display); text-transform: uppercase; letter-spacing: -0.01em; margin: 0; }
 h1 em { font-style: normal; color: var(--rec); }
@@ -180,7 +180,7 @@ h1 em { font-style: normal; color: var(--rec); }
 
 /* Dock: run controls and contributors, under the cards */
 /* Dock under the cards: run controls, then the contributors on their own row. */
-.dock { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; margin-top: 30px; }
+.dock { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; margin-top: clamp(22px, 4vh, 48px); }
 .dock-card { padding: 20px 24px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); backdrop-filter: blur(6px); }
 .dock-run { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .go {
@@ -247,7 +247,7 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 }
 @media (max-height: 960px) and (min-width: 1100px) {
   .top { padding: 10px 0 4px; }
-  .hero { padding: 4px 0 20px; }
+  .hero { padding: 0 0 clamp(20px, 4vh, 40px); }
   h1 { font-size: clamp(36px, 3.8vw, 60px); }
   .lede { font-size: 13px; }
   .lane-info { padding: 12px 16px 10px; gap: 6px 12px; }
@@ -256,7 +256,7 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
   .verdict-num { font-size: clamp(38px, 3.4vw, 58px); }
   .lane-race { padding: 10px 14px; gap: 8px; }
   .viz { height: clamp(200px, 23vh, 220px); }
-  .dock { margin-top: 20px; }
+  .dock { margin-top: clamp(16px, 3vh, 32px); }
   .dock-card { padding: 14px 18px; }
   .go { padding: 12px 24px; font-size: 19px; }
   .people img { width: 26px; height: 26px; }
