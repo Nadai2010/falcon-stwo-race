@@ -15,6 +15,7 @@
 - Original: OpenZeppelin's `Falcon512ShakeVerifier::verify` at `bece5c07`. Record: accepted job `fj_97a86d12`.
 - Number: `l2_gas` of the repository's `bench_verify_falcon_512_shake` test (its genuine 9-block SHAKE-256 fixture), reported by Starknet Foundry 0.59.0. The board's score is the mean over 27 held-out signatures, 11 of them 8-block, so it is lower than this single fixture.
 - Official: 27,915,721 against 48,398,466 gas, 1.73x (2026-10-18).
+- How the three Falcon numbers relate: the board's 48.4M / 27.9M is the mean over 27 signatures (11 need 8 SHAKE blocks, 16 need 9); the race's 50.2M / 29.0M is the repository's single 9-block fixture (the board's 9-block figures are 50.17M / 28.99M); the mainnet card's 53.5M / 32.3M is a whole transaction, about 3.3M of account logic, transfer and state writes on top of the verification.
 
 ## Honesty rules
 - Original and record always get the same input, parameters and thread budget.
