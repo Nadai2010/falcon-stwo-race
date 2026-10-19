@@ -54,12 +54,11 @@ body {
 /* One screen: header, title, three lanes filling the height, dock, footnote. */
 .app {
   position: relative; z-index: 2;
-  display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  display: grid; grid-template-rows: auto minmax(0, 1fr);
   min-height: 100vh; padding: 0 var(--gutter);
 }
-@media (min-width: 1100px) and (min-height: 720px) {
-  .app { height: 100vh; }
-}
+/* Everything under the header sits in the middle of the remaining height. */
+.stage { align-self: center; padding-bottom: 2vh; }
 
 /* Header */
 .top { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 6px; font: 500 13px/1 var(--mono); }
@@ -84,7 +83,7 @@ h1 em { font-style: normal; color: var(--rec); text-shadow: 0 0 60px var(--rec-g
 
 /* Lanes */
 /* The three cards share two row tracks (subgrid), so their headers have the same height. */
-.lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto minmax(0, 1fr); column-gap: 14px; min-height: 0; }
+.lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto auto; column-gap: 14px; }
 .lane {
   position: relative; display: grid; grid-row: span 2; grid-template-rows: subgrid; min-height: 0;
   border: 1px solid var(--line); border-radius: var(--r); overflow: hidden;
@@ -136,7 +135,7 @@ h1 em { font-style: normal; color: var(--rec); text-shadow: 0 0 60px var(--rec-g
 .lane[data-lane="falcon"] .r-main { font-size: clamp(16px, 1.3vw, 23px); }
 .side[data-side="record"] .r-main { color: var(--rec); }
 .r-sub { font: 400 10px var(--mono); color: var(--muted); min-height: 1em; overflow: hidden; text-overflow: ellipsis; }
-.viz { position: relative; min-height: 130px; border-top: 1px solid var(--line-soft); }
+.viz { position: relative; height: clamp(140px, 22vh, 230px); border-top: 1px solid var(--line-soft); }
 .plot { position: absolute; inset: 6px 0 0; width: 100%; height: calc(100% - 6px); display: block; }
 .gasbars { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
 .gasbar { position: relative; height: clamp(30px, 4vh, 44px); border-radius: 6px; background: var(--line-soft); overflow: hidden; }
@@ -151,10 +150,8 @@ h1 em { font-style: normal; color: var(--rec); text-shadow: 0 0 60px var(--rec-g
 
 /* Dock: run controls and contributors, under the cards */
 /* Dock under the cards: run controls, then the contributors on their own row. */
-.dock {
-  display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px;
-  margin-top: 12px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel);
-}
+.dock { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; margin-top: 18px; }
+.dock-card { padding: 16px 20px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); backdrop-filter: blur(6px); }
 .dock-run { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .go {
   position: relative; isolation: isolate;
@@ -185,7 +182,7 @@ h1 em { font-style: normal; color: var(--rec); text-shadow: 0 0 60px var(--rec-g
 .status.live { color: var(--paper); }
 kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); }
 
-.dock-people { min-width: 0; display: flex; align-items: center; gap: 16px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.dock-people { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .people-head { margin: 0; display: flex; align-items: baseline; gap: 10px; font: 700 16px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; }
 .people-head small { font: 400 10px var(--mono); color: var(--muted); text-transform: none; letter-spacing: 0; }
 /* Overlapping avatar stack in one row; hover lifts one and names it. */
@@ -210,6 +207,10 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
 .setup.replay { color: var(--muted); }
 .setup code { color: var(--paper); }
 
+@media (max-width: 1599px) and (min-width: 1100px) {
+  .status { display: none; }
+  .dock-people { flex-direction: column; align-items: flex-start; justify-content: center; gap: 8px; }
+}
 @media (max-height: 960px) and (min-width: 1100px) {
   .top { padding: 10px 0 4px; }
   .hero { padding: 2px 0 8px; }
@@ -220,9 +221,9 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
   .lane-sub { font-size: 12px; }
   .verdict-num { font-size: clamp(38px, 3.4vw, 58px); }
   .lane-race { padding: 10px 14px; gap: 8px; }
-  .viz { min-height: 100px; }
-  .dock { margin-top: 8px; padding: 8px 14px; gap: 8px; }
-  .dock-people { padding-top: 8px; }
+  .viz { height: clamp(120px, 20vh, 190px); }
+  .dock { margin-top: 12px; }
+  .dock-card { padding: 12px 16px; }
   .go { padding: 12px 24px; font-size: 19px; }
   .people img { width: 26px; height: 26px; }
   .foot { padding: 8px 0 10px; font-size: 10px; }
@@ -232,6 +233,7 @@ kbd { font: 600 10px var(--mono); padding: 1px 5px; border: 1px solid var(--line
   .lanes { grid-template-columns: 1fr; grid-template-rows: none; row-gap: 14px; }
   .lane { grid-row: auto; grid-template-rows: auto auto; }
   .viz { height: 200px; }
+  .dock { grid-template-columns: 1fr; }
   .dock-people { flex-direction: column; align-items: flex-start; }
   .people { justify-content: flex-start; flex-wrap: wrap; row-gap: 6px; }
 }
