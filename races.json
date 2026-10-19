@@ -1,0 +1,88 @@
+{
+  "paths": {
+    "fast_original_prove": "build/stwo-pinned/target/release/privacy_prove_stdout",
+    "fast_original_verify": "build/stwo-pinned/target/release/privacy_verify",
+    "fast_record_prove": "build/stwo-fast-record/target/release/privacy_prove_stdout",
+    "fast_record_verify": "build/stwo-fast-record/target/release/privacy_verify",
+    "light_original_prove": "build/stwo-s1-original/target/release/privacy_prove_stdout",
+    "light_original_verify": "build/stwo-s1-original/target/release/privacy_verify",
+    "light_record_prove": "build/stwo-s1-light-record/target/release/privacy_prove_stdout",
+    "light_record_verify": "build/stwo-s1-light-record/target/release/privacy_verify",
+    "s2_statement": "build/inputs/s2_statement.json",
+    "s1_statement": "build/inputs/s1_statement.json",
+    "falcon_original_repo": "build/falcon-oz-baseline",
+    "falcon_record_repo": "build/falcon-record"
+  },
+  "lanes": [
+    {
+      "id": "fast",
+      "kind": "prover",
+      "metric": "time",
+      "title": "Fast prover",
+      "kicker": "Season 2",
+      "subtitle": "One full Stwo proof of a private transaction at 100 provable bits",
+      "statement": "s2_statement",
+      "original": {
+        "label": "Stwo, pinned prover d6276445",
+        "prove": ["{fast_original_prove}", "{statement}"],
+        "verify": ["{fast_original_verify}", "{proof}", "{preimage}"]
+      },
+      "record": {
+        "label": "Record 5eafa818 (frontier 7a1b6eae)",
+        "prove": ["{fast_record_prove}", "{statement}"],
+        "verify": ["{fast_original_verify}", "{proof}", "{preimage}"]
+      },
+      "official": {
+        "text": "Board: the record proves in 0.4992 of the pinned prover's time, on the evaluator's 16-core AVX2 host.",
+        "source": "https://stwo.provably.fast/",
+        "date": "2026-10-18"
+      }
+    },
+    {
+      "id": "light",
+      "kind": "prover",
+      "metric": "memory",
+      "title": "Light prover",
+      "kicker": "Season 1",
+      "subtitle": "The same private transaction proved in as little memory as possible",
+      "statement": "s1_statement",
+      "original": {
+        "label": "Stwo, unmodified (dd1787bc)",
+        "prove": ["{light_original_prove}", "{statement}"],
+        "verify": ["{light_original_verify}", "{proof}", "{preimage}"]
+      },
+      "record": {
+        "label": "Lowest measured peak, job 7bb39eeb",
+        "prove": ["{light_record_prove}", "{statement}"],
+        "verify": ["{light_original_verify}", "{proof}", "{preimage}"]
+      },
+      "official": {
+        "text": "Board: the first season cut peak memory from 13.9 GiB to 1.04 GiB.",
+        "source": "https://stwo.provably.fast/",
+        "date": "2026-10-12"
+      }
+    },
+    {
+      "id": "falcon",
+      "kind": "gas",
+      "metric": "gas",
+      "title": "Quantum-safe signature",
+      "kicker": "Falcon-512",
+      "subtitle": "Verifying one standard Falcon-512 signature in a Starknet account, in Sierra gas",
+      "test": "bench_verify_falcon_512_shake",
+      "original": {
+        "label": "OpenZeppelin verifier bece5c07",
+        "repo": "falcon_original_repo"
+      },
+      "record": {
+        "label": "Record fj_97a86d12",
+        "repo": "falcon_record_repo"
+      },
+      "official": {
+        "text": "Board: 27,915,721 gas against 48,398,466 (1.73x cheaper), mean over 27 held-out signatures.",
+        "source": "https://falcon.provably.fast/",
+        "date": "2026-10-18"
+      }
+    }
+  ]
+}

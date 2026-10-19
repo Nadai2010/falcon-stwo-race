@@ -1,0 +1,2951 @@
+diff --git a/crates/falcon_512/src/falcon.cairo b/crates/falcon_512/src/falcon.cairo
+index ab83acb6621f38011af5a0197e063b4a5cccb9f7..1d638d088df1739911f1487e76704116bc096208 100644
+--- a/crates/falcon_512/src/falcon.cairo
++++ b/crates/falcon_512/src/falcon.cairo
+@@ -19,7 +19,8 @@
+ 
+ use pqbench_ntt::engine::intt;
+ use pqbench_ntt::falcon512::{PRODUCT_BITS, PRODUCT_BOUND_FELT, config};
+-use pqbench_ntt::ntt_falcon512_fast_u16_unchecked;
++use pqbench_ntt::{LazyCoeff, ntt_falcon512_fast_u16_lazy_unchecked, ntt_falcon512_fast_u16_unchecked};
++use corelib_imports::integer::{U128sFromFelt252Result, u128s_from_felt252};
+ use crate::zq::{Q32, center_sq, centered_difference_sq};
+ 
+ /// Maximum allowed `||s0||^2 + ||s1||^2` for Falcon-512 (FIPS 206 / falcon.py sig_bound).
+@@ -28,6 +29,202 @@ pub const SIG_BOUND_512: u64 = 34034726;
+ /// The Falcon modulus as a u32 divisor.
+ const Q32_NZ: NonZero<u32> = 12289;
+ 
++use corelib_imports::bounded_int::{
++    AddHelper, BoundedInt, DivRemHelper, MulHelper, UnitInt, bounded_int, upcast,
++};
++#[feature("bounded-int-utils")]
++use core::internal::bounded_int::SubHelper;
++
++type QUnit = UnitInt<12289>;
++const Q_NZ_B: NonZero<QUnit> = 12289;
++
++/// The modulus as a cell rather than an immediate, so that the divisions in the fused
++/// check loop use the loop parameter in place instead of first copying the constant.
++#[inline(never)]
++fn q_cell() -> NonZero<QUnit> {
++    Q_NZ_B
++}
++
++/// The hint check's constants as cells (see [`q_cell`]).
++#[derive(Copy, Drop)]
++pub(crate) struct HintConsts {
++    q: NonZero<QUnit>,
++    offset: felt252,
++    inv_q: felt252,
++}
++
++#[inline(never)]
++pub(crate) fn hint_consts() -> HintConsts {
++    HintConsts { q: Q_NZ_B, offset: LAZY_HINT_OFFSET, inv_q: INV_Q }
++}
++/// `u16 * u16`.
++type U16Product = BoundedInt<0, 4294836225>;
++/// `6q - c` for a `u16` `c`: 6q = 73734 >= 2^16 - 1, so never negative.
++type SixQMinus = BoundedInt<8199, 73734>;
++type HintCheck = BoundedInt<8199, 4294909959>;
++type RemQ = BoundedInt<0, 12288>;
++type U128B = BoundedInt<0, 340282366920938463463374607431768211455>;
++/// The smallest multiple of q at or above 2^122, the bound on the lazy NTT outputs.
++const LAZY_HINT_OFFSET: felt252 = 5316911983139663491615228241121380889;
++/// `6144 + 5q - t` for a `u16` `t` (6144 + 5q = 67589 >= 2^16 - 1).
++type CenterOffset = BoundedInt<2054, 67589>;
++type CenterSum = BoundedInt<2054, 133124>;
++type Centered = BoundedInt<-6144, 6144>;
++type CenteredSq = BoundedInt<-37748736, 37748736>;
++
++impl MulU16U16 of MulHelper<u16, u16> {
++    type Result = U16Product;
++}
++impl SubSixQU16 of SubHelper<UnitInt<73734>, u16> {
++    type Result = SixQMinus;
++}
++impl AddProductSixQ of AddHelper<U16Product, SixQMinus> {
++    type Result = HintCheck;
++}
++impl DivRemHintCheckQ of DivRemHelper<HintCheck, QUnit> {
++    type DivT = BoundedInt<0, 349492>;
++    type RemT = RemQ;
++}
++impl DivRemU128Q of DivRemHelper<U128B, QUnit> {
++    type DivT = BoundedInt<0, 27689996494502275487295516920153650>;
++    type RemT = RemQ;
++}
++impl AddU16CenterOffsetFirst of AddHelper<u16, UnitInt<67589>> {
++    type Result = BoundedInt<67589, 133124>;
++}
++impl SubCenterSumU16 of SubHelper<BoundedInt<67589, 133124>, u16> {
++    type Result = CenterSum;
++}
++impl SubCenterOffsetU16 of SubHelper<UnitInt<67589>, u16> {
++    type Result = CenterOffset;
++}
++impl AddU16CenterOffset of AddHelper<u16, CenterOffset> {
++    type Result = CenterSum;
++}
++impl DivRemCenterSumQ of DivRemHelper<CenterSum, QUnit> {
++    type DivT = BoundedInt<0, 10>;
++    type RemT = RemQ;
++}
++impl SubRemHalf of SubHelper<RemQ, UnitInt<6144>> {
++    type Result = Centered;
++}
++impl MulCentered of MulHelper<Centered, Centered> {
++    type Result = CenteredSq;
++}
++
++/// `(a * b - c) mod q` as a remainder of a non-negative bounded value: `a * b + (6q - c)`,
++/// built with no runtime check, then one bounded division by q.
++#[inline(always)]
++fn product_difference_rem(a: u16, b: u16, c: u16) -> felt252 {
++    let six_q: UnitInt<73734> = 73734;
++    let x = bounded_int::add(bounded_int::mul(a, b), bounded_int::sub(six_q, c));
++    let (_, r) = bounded_int::div_rem(x, Q_NZ_B);
++    r.into()
++}
++
++/// `(a*b - c) mod q` for a lazy NTT output `c` in `[0, 2^122)`: `a*b + K - c` is
++/// non-negative and below `2^123`, so it converts to a `u128` exactly.
++#[inline(always)]
++fn lazy_product_difference_rem(a: u16, b: u16, c: LazyCoeff, q: NonZero<QUnit>) -> felt252 {
++    let product: felt252 = bounded_int::mul(a, b).into();
++    let x = product + (LAZY_HINT_OFFSET - c.value);
++    let x: U128B = match u128s_from_felt252(x) {
++        U128sFromFelt252Result::Narrow(low) => upcast(low),
++        U128sFromFelt252Result::Wide(_) => panic!("lazy hint check out of range"),
++    };
++    let (_, r) = bounded_int::div_rem(x, q);
++    r.into()
++}
++
++type CenterShift = BoundedInt<6144, 71679>;
++impl AddU16Half of AddHelper<u16, UnitInt<6144>> {
++    type Result = CenterShift;
++}
++impl DivRemCenterShiftQ of DivRemHelper<CenterShift, QUnit> {
++    type DivT = BoundedInt<0, 5>;
++    type RemT = RemQ;
++}
++
++type LazyProduct = BoundedInt<0, 4181389724724491839037947176121567782359040>;
++/// The smallest multiple of q at or above 2^128 - 1, so that `K - c` is non-negative for
++/// every `u128` `c`.
++type LazyOffset2 = UnitInt<340282366920938463463374607431768217139>;
++const LAZY_OFFSET2: LazyOffset2 = 340282366920938463463374607431768217139;
++type LazyOffset2Minus = BoundedInt<5684, 340282366920938463463374607431768217139>;
++type LazyCheck2 = BoundedInt<5684, 4181730007091412777501410550728999550576179>;
++impl MulU128Zq of MulHelper<U128B, RemQ> {
++    type Result = LazyProduct;
++}
++impl SubLazyOffset2 of SubHelper<LazyOffset2, U128B> {
++    type Result = LazyOffset2Minus;
++}
++impl AddLazyCheck2 of AddHelper<LazyProduct, LazyOffset2Minus> {
++    type Result = LazyCheck2;
++}
++/// Its quotient by q stays below 2^128, as `bounded_int_div_rem` requires.
++impl DivRemLazyCheck2Q of DivRemHelper<LazyCheck2, QUnit> {
++    type DivT = BoundedInt<0, 340282366920938463463374607431768211455>;
++    type RemT = RemQ;
++}
++
++/// A lazy NTT output as a `u128`: canonical inputs keep it below 2^122.
++#[inline(always)]
++fn lazy_as_u128(c: LazyCoeff) -> U128B {
++    match u128s_from_felt252(c.value) {
++        U128sFromFelt252Result::Narrow(low) => upcast(low),
++        U128sFromFelt252Result::Wide(_) => panic!("lazy NTT output out of range"),
++    }
++}
++
++/// `(a*b - c) mod q` for lazy NTT outputs `a` and `c` and a reduced `b < q`:
++/// `a*b + K - c` with `K = q * ceil((2^128 - 1) / q)` is a non-negative bounded integer
++/// below `q * 2^128`, congruent to `a*b - c`, reduced by one division.
++#[inline(always)]
++fn lazy2_product_difference_rem(a: LazyCoeff, b: RemQ, c: LazyCoeff, q: NonZero<QUnit>) -> felt252 {
++    let k: LazyOffset2 = LAZY_OFFSET2;
++    let x = bounded_int::add(bounded_int::mul(lazy_as_u128(a), b), bounded_int::sub(k, lazy_as_u128(c)));
++    let (_, r) = bounded_int::div_rem(x, q);
++    r.into()
++}
++
++/// q^-1 in the Stark field.
++const INV_Q: felt252 = 0x590625348ee7b13ed5063a897278482929cf2104a53c8ebd06ba86c7dbd6164;
++
++/// Whether q divides `a*b - c`, for lazy NTT outputs `a`, `c` in `[0, 2^122)` and `b < q`.
++/// `x = a*b + K - c` is an integer in `[0, 2^137)`. If `q` divides it, `x * q^-1` in the
++/// field is the integer quotient, below 2^128. If not, `x * q^-1` is at least 2^128:
++/// otherwise `q * y` and `x` would be integers below `2^142 < P` congruent mod `P`, so
++/// equal, and `q` would divide `x`. One range check, no division.
++#[inline(always)]
++pub(crate) fn hint_quotient(a: LazyCoeff, b: RemQ, c: LazyCoeff, k: HintConsts) -> felt252 {
++    let b: felt252 = b.into();
++    (a.value * b + (k.offset - c.value)) * k.inv_q
++}
++
++/// Squared centered representative of a coefficient: `(v + 6144) mod q - 6144` lies in
++/// [-6144, 6144] and is congruent to `v`; one division, no branch.
++#[inline(always)]
++fn center_sq_b(v: u16, q: NonZero<QUnit>) -> felt252 {
++    let half: UnitInt<6144> = 6144;
++    let (_, r) = bounded_int::div_rem(bounded_int::add(v, half), q);
++    let c = bounded_int::sub(r, half);
++    bounded_int::mul(c, c).into()
++}
++
++/// Squared centered representative of `a - b` mod q: `(a - b + 6144) mod q - 6144` lies in
++/// [-6144, 6144] and is congruent to `a - b`, so its square is the centered square.
++#[inline(always)]
++fn centered_difference_sq_b(a: u16, b: u16, q: NonZero<QUnit>) -> felt252 {
++    let offset: UnitInt<67589> = 67589;
++    let half: UnitInt<6144> = 6144;
++    // (a + offset) - b: the constant is added as an immediate, never copied.
++    let (_, r) = bounded_int::div_rem(bounded_int::sub(bounded_int::add(a, offset), b), q);
++    let c = bounded_int::sub(r, half);
++    bounded_int::mul(c, c).into()
++}
++
++
++
+ #[inline(always)]
+ fn felts_to_u16(mut values: Span<felt252>) -> Array<u16> {
+     let mut out: Array<u16> = array![];
+@@ -81,7 +278,7 @@ pub(crate) fn verify_512_with_hint_u16(
+     // Both spans came from canonical base-Q unpacking (or the public wrapper's documented
+     // canonical-coefficient precondition), so the generated unchecked NTT is sound here.
+     let s1_ntt = ntt_falcon512_fast_u16_unchecked(s1);
+-    let hint_ntt = ntt_falcon512_fast_u16_unchecked(mul_hint);
++    let hint_ntt = ntt_falcon512_fast_u16_lazy_unchecked(mul_hint);
+ 
+     let mut s1_ntt_iter = s1_ntt.span();
+     let mut hint_ntt_iter = hint_ntt.span();
+@@ -94,6 +291,7 @@ pub(crate) fn verify_512_with_hint_u16(
+     // centered-norm accumulation per coefficient.
+     // Max acc = 512 * 2 * 6144^2 < 2^36, so the felt252 accumulator cannot wrap
+     // and always fits u64.
++    let qb = q_cell();
+     let mut acc: felt252 = 0;
+     let mut ok = true;
+     while let Some(s1n_c) = s1_ntt_iter.multi_pop_front::<16>() {
+@@ -128,22 +326,22 @@ pub(crate) fn verify_512_with_hint_u16(
+             .unbox();
+         // s1n*h + q - hn has zero remainder iff the two NTT coordinates agree mod q,
+         // which by bijectivity binds mul_hint to s1*h.
+-        let (_, r0) = DivRem::div_rem(product_difference(s1n0, h0, hn0), Q32_NZ);
+-        let (_, r1) = DivRem::div_rem(product_difference(s1n1, h1, hn1), Q32_NZ);
+-        let (_, r2) = DivRem::div_rem(product_difference(s1n2, h2, hn2), Q32_NZ);
+-        let (_, r3) = DivRem::div_rem(product_difference(s1n3, h3, hn3), Q32_NZ);
+-        let (_, r4) = DivRem::div_rem(product_difference(s1n4, h4, hn4), Q32_NZ);
+-        let (_, r5) = DivRem::div_rem(product_difference(s1n5, h5, hn5), Q32_NZ);
+-        let (_, r6) = DivRem::div_rem(product_difference(s1n6, h6, hn6), Q32_NZ);
+-        let (_, r7) = DivRem::div_rem(product_difference(s1n7, h7, hn7), Q32_NZ);
+-        let (_, r8) = DivRem::div_rem(product_difference(s1n8, h8, hn8), Q32_NZ);
+-        let (_, r9) = DivRem::div_rem(product_difference(s1n9, h9, hn9), Q32_NZ);
+-        let (_, r10) = DivRem::div_rem(product_difference(s1n10, h10, hn10), Q32_NZ);
+-        let (_, r11) = DivRem::div_rem(product_difference(s1n11, h11, hn11), Q32_NZ);
+-        let (_, r12) = DivRem::div_rem(product_difference(s1n12, h12, hn12), Q32_NZ);
+-        let (_, r13) = DivRem::div_rem(product_difference(s1n13, h13, hn13), Q32_NZ);
+-        let (_, r14) = DivRem::div_rem(product_difference(s1n14, h14, hn14), Q32_NZ);
+-        let (_, r15) = DivRem::div_rem(product_difference(s1n15, h15, hn15), Q32_NZ);
++        let r0 = lazy_product_difference_rem(s1n0, h0, hn0, qb);
++        let r1 = lazy_product_difference_rem(s1n1, h1, hn1, qb);
++        let r2 = lazy_product_difference_rem(s1n2, h2, hn2, qb);
++        let r3 = lazy_product_difference_rem(s1n3, h3, hn3, qb);
++        let r4 = lazy_product_difference_rem(s1n4, h4, hn4, qb);
++        let r5 = lazy_product_difference_rem(s1n5, h5, hn5, qb);
++        let r6 = lazy_product_difference_rem(s1n6, h6, hn6, qb);
++        let r7 = lazy_product_difference_rem(s1n7, h7, hn7, qb);
++        let r8 = lazy_product_difference_rem(s1n8, h8, hn8, qb);
++        let r9 = lazy_product_difference_rem(s1n9, h9, hn9, qb);
++        let r10 = lazy_product_difference_rem(s1n10, h10, hn10, qb);
++        let r11 = lazy_product_difference_rem(s1n11, h11, hn11, qb);
++        let r12 = lazy_product_difference_rem(s1n12, h12, hn12, qb);
++        let r13 = lazy_product_difference_rem(s1n13, h13, hn13, qb);
++        let r14 = lazy_product_difference_rem(s1n14, h14, hn14, qb);
++        let r15 = lazy_product_difference_rem(s1n15, h15, hn15, qb);
+         // Remainders are non-negative, so the sum is zero iff all sixteen are.
+         if r0
+             + r1
+@@ -176,22 +374,22 @@ pub(crate) fn verify_512_with_hint_u16(
+             .multi_pop_front::<16>()
+             .unwrap())
+             .unbox();
+-        acc += centered_difference_sq(m0, t0) + center_sq(v0);
+-        acc += centered_difference_sq(m1, t1) + center_sq(v1);
+-        acc += centered_difference_sq(m2, t2) + center_sq(v2);
+-        acc += centered_difference_sq(m3, t3) + center_sq(v3);
+-        acc += centered_difference_sq(m4, t4) + center_sq(v4);
+-        acc += centered_difference_sq(m5, t5) + center_sq(v5);
+-        acc += centered_difference_sq(m6, t6) + center_sq(v6);
+-        acc += centered_difference_sq(m7, t7) + center_sq(v7);
+-        acc += centered_difference_sq(m8, t8) + center_sq(v8);
+-        acc += centered_difference_sq(m9, t9) + center_sq(v9);
+-        acc += centered_difference_sq(m10, t10) + center_sq(v10);
+-        acc += centered_difference_sq(m11, t11) + center_sq(v11);
+-        acc += centered_difference_sq(m12, t12) + center_sq(v12);
+-        acc += centered_difference_sq(m13, t13) + center_sq(v13);
+-        acc += centered_difference_sq(m14, t14) + center_sq(v14);
+-        acc += centered_difference_sq(m15, t15) + center_sq(v15);
++        acc += centered_difference_sq_b(m0, t0, qb) + center_sq_b(v0, qb);
++        acc += centered_difference_sq_b(m1, t1, qb) + center_sq_b(v1, qb);
++        acc += centered_difference_sq_b(m2, t2, qb) + center_sq_b(v2, qb);
++        acc += centered_difference_sq_b(m3, t3, qb) + center_sq_b(v3, qb);
++        acc += centered_difference_sq_b(m4, t4, qb) + center_sq_b(v4, qb);
++        acc += centered_difference_sq_b(m5, t5, qb) + center_sq_b(v5, qb);
++        acc += centered_difference_sq_b(m6, t6, qb) + center_sq_b(v6, qb);
++        acc += centered_difference_sq_b(m7, t7, qb) + center_sq_b(v7, qb);
++        acc += centered_difference_sq_b(m8, t8, qb) + center_sq_b(v8, qb);
++        acc += centered_difference_sq_b(m9, t9, qb) + center_sq_b(v9, qb);
++        acc += centered_difference_sq_b(m10, t10, qb) + center_sq_b(v10, qb);
++        acc += centered_difference_sq_b(m11, t11, qb) + center_sq_b(v11, qb);
++        acc += centered_difference_sq_b(m12, t12, qb) + center_sq_b(v12, qb);
++        acc += centered_difference_sq_b(m13, t13, qb) + center_sq_b(v13, qb);
++        acc += centered_difference_sq_b(m14, t14, qb) + center_sq_b(v14, qb);
++        acc += centered_difference_sq_b(m15, t15, qb) + center_sq_b(v15, qb);
+     }
+     if !ok {
+         return false;
+@@ -200,6 +398,133 @@ pub(crate) fn verify_512_with_hint_u16(
+     norm <= SIG_BOUND_512
+ }
+ 
++/// [`verify_512_with_hint_u16`] with the public key's coefficients as bounded integers
++/// below q, which lets the check take both transforms unreduced.
++pub(crate) fn verify_512_with_hint_zq(
++    s1: Span<u16>, norm: felt252, h_ntt: Span<RemQ>, mul_hint: Span<u16>, msg_point: Span<u16>,
++) -> bool {
++    assert(s1.len() == 512, 's1 must be 512 coeffs');
++    assert(h_ntt.len() == 512, 'h_ntt must be 512 coeffs');
++    assert(mul_hint.len() == 512, 'mul_hint must be 512 coeffs');
++    assert(msg_point.len() == 512, 'msg_point must be 512 coeffs');
++
++    // Both spans came from canonical base-Q unpacking (or the public wrapper's documented
++    // canonical-coefficient precondition), so the generated unchecked NTT is sound here.
++    let s1_ntt = ntt_falcon512_fast_u16_lazy_unchecked(s1);
++    let hint_ntt = ntt_falcon512_fast_u16_lazy_unchecked(mul_hint);
++
++    let mut s1_ntt_iter = s1_ntt.span();
++    let mut hint_ntt_iter = hint_ntt.span();
++    let mut h_iter = h_ntt;
++
++    // Hint check, 16-way unrolled (512 = 16 * 32, no remainder). Both norm terms were
++    // summed while unpacking s1 and the mul hint: at most 512 * 2 * 6144^2 < 2^36, so the
++    // felt252 sum cannot wrap and always fits u64.
++    let hk = hint_consts();
++    let acc: felt252 = norm;
++    let mut ok = true;
++    while let Some(s1n_c) = s1_ntt_iter.multi_pop_front::<16>() {
++        let [
++            s1n0,
++            s1n1,
++            s1n2,
++            s1n3,
++            s1n4,
++            s1n5,
++            s1n6,
++            s1n7,
++            s1n8,
++            s1n9,
++            s1n10,
++            s1n11,
++            s1n12,
++            s1n13,
++            s1n14,
++            s1n15,
++        ] =
++            (*s1n_c)
++            .unbox();
++        let [hn0, hn1, hn2, hn3, hn4, hn5, hn6, hn7, hn8, hn9, hn10, hn11, hn12, hn13, hn14, hn15] =
++            (*hint_ntt_iter
++            .multi_pop_front::<16>()
++            .unwrap())
++            .unbox();
++        let [h0, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12, h13, h14, h15] = (*h_iter
++            .multi_pop_front::<16>()
++            .unwrap())
++            .unbox();
++        // s1n*h + q - hn has zero remainder iff the two NTT coordinates agree mod q,
++        // which by bijectivity binds mul_hint to s1*h.
++        // q divides each s1n*h - hn exactly when the two NTT coordinates agree mod q,
++        // which by bijectivity binds mul_hint to s1*h.
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n0, h0, hn0, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n1, h1, hn1, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n2, h2, hn2, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n3, h3, hn3, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n4, h4, hn4, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n5, h5, hn5, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n6, h6, hn6, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n7, h7, hn7, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n8, h8, hn8, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n9, h9, hn9, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n10, h10, hn10, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n11, h11, hn11, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n12, h12, hn12, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n13, h13, hn13, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n14, h14, hn14, hk)) {
++            return false;
++        }
++        if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(s1n15, h15, hn15, hk)) {
++            return false;
++        }
++    }
++    if !ok {
++        return false;
++    }
++    let norm: u64 = acc.try_into().unwrap();
++    norm <= SIG_BOUND_512
++}
++
++/// The hint check of [`verify_512_with_hint_zq`] fused with unpacking the public key: both
++/// transforms are taken unreduced, and each coefficient of `h` is checked against them as
++/// soon as it is unpacked, so `h` is never stored. False if the key is not canonical or any
++/// coordinate fails.
++pub(crate) fn check_hint_zq(s1: Span<u16>, mul_hint: Span<u16>, public_key: Span<felt252>) -> bool {
++    assert(s1.len() == 512, 's1 must be 512 coeffs');
++    assert(mul_hint.len() == 512, 'mul_hint must be 512 coeffs');
++    let s1_ntt = ntt_falcon512_fast_u16_lazy_unchecked(s1);
++    let hint_ntt = ntt_falcon512_fast_u16_lazy_unchecked(mul_hint);
++    crate::packing::unpack_512_zq_check(public_key, s1_ntt.span(), hint_ntt.span(), hint_consts())
++}
++
+ /// Verify without a hint (direct variant): compute `s1 * h` on-chain as
+ /// `INTT(NTT(s1) ∘ h_ntt)` — 1 NTT + 1 INTT because the public key is already stored in
+ /// the NTT domain — then accept iff `||msg_point - s1*h||^2 + ||s1||^2 <= SIG_BOUND_512`.
+diff --git a/crates/falcon_512/src/hashing/hash_to_point.cairo b/crates/falcon_512/src/hashing/hash_to_point.cairo
+index 9673b32080a397e9fb9e9c28636b420eedeb5a6b..42418db1cab6936f7e8a47a9cc1302b51e68e31a 100644
+--- a/crates/falcon_512/src/hashing/hash_to_point.cairo
++++ b/crates/falcon_512/src/hashing/hash_to_point.cairo
+@@ -30,7 +30,9 @@ use core::poseidon::hades_permutation;
+ use corelib_imports::bounded_int::{
+     BoundedInt, DivRemHelper, UnitInt, bounded_int_div_rem, downcast, upcast,
+ };
+-use super::shake256::keccak_f1600;
++#[feature("bounded-int-utils")]
++use core::internal::bounded_int::{ConstrainHelper, constrain};
++use super::shake256::{keccak_f1600_packed, pack};
+ 
+ /// blake2s-256 initial state: the BLAKE2s IV with the standard parameter word
+ /// (digest_length = 32, key = 0, fanout = 1, depth = 1) XORed into h[0].
+@@ -206,49 +208,284 @@ pub fn hash_to_point_shake_512(
+     // Lane 4: salt_b bytes 12..16 in the low half, salt_b bytes 16..20 in the high half.
+     let l4: u128 = (sb12.into() + sb.high.into() * 0x100000000).try_into().unwrap();
+ 
+-    let mut state = keccak_f1600(
++    // The same block in the packed layout of `keccak_f1600_packed`: per row `y`, lanes
++    // 5y, 5y + 1 in one word and 5y + 2, 5y + 3 in another, then column 4 as the pairs
++    // (4, 9), (14, 19) and lane 24. Only lane 16 (the pad terminator) is set beyond lane 9.
++    let mut state = keccak_f1600_packed(
+         [
+-            a0, a1, l2, l3, l4, m0, m1, m2, m3, 0x1f, 0, 0, 0, 0, 0, 0, 0x8000000000000000, 0, 0, 0,
+-            0, 0, 0, 0, 0,
++            pack(a0, a1), pack(m0, m1), 0, 0x80000000000000000000000000000000, 0, pack(l2, l3),
++            pack(m2, m3), 0, 0, 0, pack(l4, 0x1f), 0, 0,
+         ],
+     );
+ 
+-    let q32: NonZero<u32> = 12289_u32.try_into().unwrap();
+-    let two16: NonZero<u64> = 0x10000_u64.try_into().unwrap();
+-    let b256: NonZero<u64> = 0x100_u64.try_into().unwrap();
+     let mut coeffs: Array<u16> = array![];
++    let k = squeeze_consts();
+     loop {
+-        let mut lanes = state.span().slice(0, 17);
+-        while let Some(lane) = lanes.pop_front() {
+-            push_lane_words(*lane, two16, b256, q32, ref coeffs);
+-        }
++        push_block(@state, ref coeffs, k);
+         if coeffs.len() == 512 {
+             break;
+         }
+-        state = keccak_f1600(state);
++        state = keccak_f1600_packed(state);
+     }
+     Some(coeffs)
+ }
+ 
++/// The squeeze's divisors and byte mask as cells rather than immediates: built by a
++/// non-inlined call, they are used in place by every division and AND of the block
++/// instead of first being copied.
++#[derive(Copy, Drop)]
++struct SqueezeConsts {
++    two64: NonZero<SqueezeTwo64>,
++    base16: NonZero<Base16>,
++    q: NonZero<PoseidonQ>,
++    even_bytes: u128,
++}
++
++#[inline(never)]
++fn squeeze_consts() -> SqueezeConsts {
++    SqueezeConsts {
++        two64: 0x10000000000000000, base16: BASE16_NZ, q: POSEIDON_Q_NZ, even_bytes: EVEN_BYTES_128,
++    }
++}
++
++type SqueezeTwo64 = UnitInt<0x10000000000000000>;
++type SqueezeLane = BoundedInt<0, 0xffffffffffffffff>;
++impl DivRemSqueezeWord of DivRemHelper<u128, SqueezeTwo64> {
++    type DivT = SqueezeLane;
++    type RemT = SqueezeLane;
++}
++
++/// A packed state word as its (high, low) 64-bit lanes.
++#[inline(always)]
++fn split_lanes(w: u128, k: SqueezeConsts) -> (u128, u128) {
++    let (high, low) = bounded_int_div_rem(w, k.two64);
++    (upcast(high), upcast(low))
++}
++
++/// A squeezed state word with the bytes of every 16-bit chunk swapped, and its quotients
++/// as its 16-bit chunks are peeled off.
++type Swapped128 = BoundedInt<0, 0xffffffffffffffffffffffffffffffff>;
++type Swapped112 = BoundedInt<0, 0xffffffffffffffffffffffffffff>;
++type Swapped96 = BoundedInt<0, 0xffffffffffffffffffffffff>;
++type Swapped80 = BoundedInt<0, 0xffffffffffffffffffff>;
++type Swapped48 = BoundedInt<0, 0xffffffffffff>;
++type Swapped32 = BoundedInt<0, 0xffffffff>;
++impl DivRemSwapped128 of DivRemHelper<Swapped128, Base16> {
++    type DivT = Swapped112;
++    type RemT = Word16;
++}
++
++/// The even bytes of a 128-bit word.
++const EVEN_BYTES_128: u128 = 0x00ff00ff00ff00ff00ff00ff00ff00ff;
++
++/// Swap the two bytes of every 16-bit chunk of a packed word (two rate lanes) at once,
++/// as [`push_lane_words`] does for one lane: one AND and one conversion per two lanes.
++#[inline(always)]
++fn swap_word(w: u128, k: SqueezeConsts) -> Swapped128 {
++    let even: u128 = w & k.even_bytes;
++    let even_f: felt252 = even.into();
++    let w_f: felt252 = w.into();
++    let swapped: u128 = (even_f * 256 + (w_f - even_f) * INV_256).try_into().unwrap();
++    upcast(swapped)
++}
++
++/// The eight 16-bit stream words of a swapped word, low lane first, in seven divisions.
++#[inline(always)]
++fn word_chunks(
++    w: Swapped128, k: SqueezeConsts,
++) -> (Word16, Word16, Word16, Word16, Word16, Word16, Word16, Word16) {
++    let (q, c0) = bounded_int_div_rem(w, k.base16);
++    let (q, c1) = bounded_int_div_rem(q, k.base16);
++    let (q, c2) = bounded_int_div_rem(q, k.base16);
++    let (q, c3) = bounded_int_div_rem(q, k.base16);
++    let (q, c4) = bounded_int_div_rem(q, k.base16);
++    let (q, c5) = bounded_int_div_rem(q, k.base16);
++    let (c7, c6) = bounded_int_div_rem(q, k.base16);
++    (c0, c1, c2, c3, c4, c5, c6, c7)
++}
++
++/// The four 16-bit stream words of a swapped word's low lane, in four divisions.
++#[inline(always)]
++fn low_lane_chunks(w: Swapped128, k: SqueezeConsts) -> (Word16, Word16, Word16, Word16) {
++    let (q, c0) = bounded_int_div_rem(w, k.base16);
++    let (q, c1) = bounded_int_div_rem(q, k.base16);
++    let (q, c2) = bounded_int_div_rem(q, k.base16);
++    let (_, c3) = bounded_int_div_rem(q, k.base16);
++    (c0, c1, c2, c3)
++}
++
++/// The eight candidates of a swapped word, low lane first.
++#[inline(always)]
++fn push_word8_uncapped(w: u128, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    let (c0, c1, c2, c3, c4, c5, c6, c7) = word_chunks(swap_word(w, k), k);
++    push_shake_candidate_uncapped(c0, ref coeffs, k);
++    push_shake_candidate_uncapped(c1, ref coeffs, k);
++    push_shake_candidate_uncapped(c2, ref coeffs, k);
++    push_shake_candidate_uncapped(c3, ref coeffs, k);
++    push_shake_candidate_uncapped(c4, ref coeffs, k);
++    push_shake_candidate_uncapped(c5, ref coeffs, k);
++    push_shake_candidate_uncapped(c6, ref coeffs, k);
++    push_shake_candidate_uncapped(c7, ref coeffs, k);
++}
++
++#[inline(always)]
++fn push_word8_capped(w: u128, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    let (c0, c1, c2, c3, c4, c5, c6, c7) = word_chunks(swap_word(w, k), k);
++    push_shake_candidate(c0, ref coeffs, k);
++    push_shake_candidate(c1, ref coeffs, k);
++    push_shake_candidate(c2, ref coeffs, k);
++    push_shake_candidate(c3, ref coeffs, k);
++    push_shake_candidate(c4, ref coeffs, k);
++    push_shake_candidate(c5, ref coeffs, k);
++    push_shake_candidate(c6, ref coeffs, k);
++    push_shake_candidate(c7, ref coeffs, k);
++}
++
++#[inline(always)]
++fn push_word8(w: u128, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    if coeffs.len() <= 512 - 8 {
++        push_word8_uncapped(w, ref coeffs, k);
++    } else {
++        push_word8_capped(w, ref coeffs, k);
++    }
++}
++
++#[inline(always)]
++fn push4_uncapped(c0: Word16, c1: Word16, c2: Word16, c3: Word16, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    push_shake_candidate_uncapped(c0, ref coeffs, k);
++    push_shake_candidate_uncapped(c1, ref coeffs, k);
++    push_shake_candidate_uncapped(c2, ref coeffs, k);
++    push_shake_candidate_uncapped(c3, ref coeffs, k);
++}
++
++#[inline(always)]
++fn push4(c0: Word16, c1: Word16, c2: Word16, c3: Word16, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    if coeffs.len() <= 512 - 4 {
++        push4_uncapped(c0, c1, c2, c3, ref coeffs, k);
++    } else {
++        push_shake_candidate(c0, ref coeffs, k);
++        push_shake_candidate(c1, ref coeffs, k);
++        push_shake_candidate(c2, ref coeffs, k);
++        push_shake_candidate(c3, ref coeffs, k);
++    }
++}
++
++/// Read the 17 rate lanes of a squeezed block, in order, from the packed state: words
++/// (0, 1), (2, 3), (5, 6), (7, 8), (10, 11), (12, 13), (15, 16) are swapped and peeled
++/// whole, each just before its candidates; lanes 4 and 9 come from the column-4 pair
++/// (4, 9), and lane 14 from (14, 19).
++#[inline(always)]
++fn push_block(state: @[u128; 13], ref coeffs: Array<u16>, k: SqueezeConsts) {
++    let [u0, u1, u2, u3, _, v0, v1, v2, _, _, g01, g23, _] = *state;
++    let (g0, g1, g2, g3, g4, g5, g6, g7) = word_chunks(swap_word(g01, k), k);
++    if coeffs.len() <= 512 - 68 {
++        // A block yields at most 68 candidates, so it cannot reach 512 from here: no
++        // per-candidate cap check.
++        push_word8_uncapped(u0, ref coeffs, k);
++        push_word8_uncapped(v0, ref coeffs, k);
++        push4_uncapped(g0, g1, g2, g3, ref coeffs, k);
++        push_word8_uncapped(u1, ref coeffs, k);
++        push_word8_uncapped(v1, ref coeffs, k);
++        push4_uncapped(g4, g5, g6, g7, ref coeffs, k);
++        push_word8_uncapped(u2, ref coeffs, k);
++        push_word8_uncapped(v2, ref coeffs, k);
++        let (h0, h1, h2, h3) = low_lane_chunks(swap_word(g23, k), k);
++        push4_uncapped(h0, h1, h2, h3, ref coeffs, k);
++        push_word8_uncapped(u3, ref coeffs, k);
++    } else {
++        // The last block: a group needs the per-candidate cap check only when it could
++        // reach 512.
++        push_word8(u0, ref coeffs, k);
++        push_word8(v0, ref coeffs, k);
++        push4(g0, g1, g2, g3, ref coeffs, k);
++        push_word8(u1, ref coeffs, k);
++        push_word8(v1, ref coeffs, k);
++        push4(g4, g5, g6, g7, ref coeffs, k);
++        push_word8(u2, ref coeffs, k);
++        push_word8(v2, ref coeffs, k);
++        let (h0, h1, h2, h3) = low_lane_chunks(swap_word(g23, k), k);
++        push4(h0, h1, h2, h3, ref coeffs, k);
++        push_word8(u3, ref coeffs, k);
++    }
++}
++
++impl DivRemWord16ByPoseidonQ of DivRemHelper<Word16, PoseidonQ> {
++    type DivT = BoundedInt<0, 5>;
++    type RemT = PoseidonZq;
++}
++
++/// [`push_poseidon_candidate`] with a single division: `candidate = k q + r` with `k` in
++/// [0, 5], and `candidate < 5q` exactly when `k != 5`, so the rejection test needs no
++/// separate checked downcast.
++#[inline(always)]
++fn push_shake_candidate(candidate: Word16, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    if coeffs.len() == 512 {
++        return;
++    }
++    let (k, r) = bounded_int_div_rem(candidate, k.q);
++    let k: felt252 = k.into();
++    if k != 5 {
++        coeffs.append(upcast(r));
++    }
++}
++
++/// 256^-1 in the Stark field: dividing an exact multiple of 256 by 256 as a field product.
++const INV_256: felt252 = 0x7f8000000000010ef0000000000000000000000000000000000000000000001;
++
++/// The even bytes of a 64-bit lane (bytes 0, 2, 4 and 6).
++const EVEN_BYTES: u128 = 0x00ff00ff00ff00ff;
++
+ /// Read one squeezed rate lane (< 2^64) as four big-endian 16-bit candidate words. The
+ /// lane's bytes are little-endian, so each 16-bit chunk holds its stream word
+ /// byte-swapped: chunk = b0 + 256*b1 for the stream word 256*b0 + b1.
++///
++/// All four chunks are swapped at once: with `even` the lane's even bytes and `odd` the
++/// rest, `256 * even + odd / 256` moves every even byte up and every odd byte down by
++/// eight bits (the division is exact, done as a field product), so its 16-bit chunks are
++/// the stream words. They are then peeled with three bounded divisions.
+ #[inline(always)]
+-fn push_lane_words(
+-    lane: u128, two16: NonZero<u64>, b256: NonZero<u64>, q32: NonZero<u32>, ref coeffs: Array<u16>,
+-) {
+-    let lane64: u64 = lane.try_into().unwrap();
+-    let (rest, c0) = DivRem::div_rem(lane64, two16);
+-    let (rest, c1) = DivRem::div_rem(rest, two16);
+-    let (c3, c2) = DivRem::div_rem(rest, two16);
+-    let (b1, b0) = DivRem::div_rem(c0, b256);
+-    push_candidate((b0 * 256 + b1).try_into().unwrap(), q32, ref coeffs);
+-    let (b1, b0) = DivRem::div_rem(c1, b256);
+-    push_candidate((b0 * 256 + b1).try_into().unwrap(), q32, ref coeffs);
+-    let (b1, b0) = DivRem::div_rem(c2, b256);
+-    push_candidate((b0 * 256 + b1).try_into().unwrap(), q32, ref coeffs);
+-    let (b1, b0) = DivRem::div_rem(c3, b256);
+-    push_candidate((b0 * 256 + b1).try_into().unwrap(), q32, ref coeffs);
++fn push_lane_words(lane: u128, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    let even: u128 = lane & k.even_bytes;
++    let even_f: felt252 = even.into();
++    let lane_f: felt252 = lane.into();
++    let swapped_f: felt252 = even_f * 256 + (lane_f - even_f) * INV_256;
++    let swapped: u64 = swapped_f.try_into().unwrap();
++    let swapped: Quot64 = upcast(swapped);
++    let (q1, w0) = bounded_int_div_rem(swapped, k.base16);
++    let (q2, w1) = bounded_int_div_rem(q1, k.base16);
++    let (w3, w2) = bounded_int_div_rem(q2, k.base16);
++    push_shake_candidate(w0, ref coeffs, k);
++    push_shake_candidate(w1, ref coeffs, k);
++    push_shake_candidate(w2, ref coeffs, k);
++    push_shake_candidate(w3, ref coeffs, k);
++}
++
++/// [`push_shake_candidate`] for a block that cannot fill the 512 coefficients.
++#[inline(always)]
++fn push_shake_candidate_uncapped(candidate: Word16, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    let (k, r) = bounded_int_div_rem(candidate, k.q);
++    let k: felt252 = k.into();
++    if k != 5 {
++        coeffs.append(upcast(r));
++    }
++}
++
++/// [`push_lane_words`] for a block that cannot fill the 512 coefficients.
++#[inline(always)]
++fn push_lane_words_uncapped(lane: u128, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    let even: u128 = lane & k.even_bytes;
++    let even_f: felt252 = even.into();
++    let lane_f: felt252 = lane.into();
++    let swapped_f: felt252 = even_f * 256 + (lane_f - even_f) * INV_256;
++    let swapped: u64 = swapped_f.try_into().unwrap();
++    let swapped: Quot64 = upcast(swapped);
++    let (q1, w0) = bounded_int_div_rem(swapped, k.base16);
++    let (q2, w1) = bounded_int_div_rem(q1, k.base16);
++    let (w3, w2) = bounded_int_div_rem(q2, k.base16);
++    push_shake_candidate_uncapped(w0, ref coeffs, k);
++    push_shake_candidate_uncapped(w1, ref coeffs, k);
++    push_shake_candidate_uncapped(w2, ref coeffs, k);
++    push_shake_candidate_uncapped(w3, ref coeffs, k);
+ }
+ 
+ /// ## Poseidon backend
+@@ -421,3 +658,172 @@ mod tests {
+         assert!(hash_to_point_512(MSG, too_big - 1, too_big - 1).is_some());
+     }
+ }
++
++impl ConstrainWord16FiveQ of ConstrainHelper<Word16, 61445> {
++    type LowT = BoundedInt<0, 61444>;
++    type HighT = BoundedInt<61445, 65535>;
++}
++
++/// Accept a candidate below 5q = 61445 and keep it unreduced: one range check, no division.
++#[inline(always)]
++fn push_raw_candidate_uncapped(candidate: Word16, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    if let Ok(low) = constrain::<Word16, 61445>(candidate) {
++        coeffs.append(upcast(low));
++    }
++}
++
++#[inline(always)]
++fn push_raw_candidate(candidate: Word16, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    if coeffs.len() == 512 {
++        return;
++    }
++    if let Ok(low) = constrain::<Word16, 61445>(candidate) {
++        coeffs.append(upcast(low));
++    }
++}
++
++/// The eight candidates of a swapped word, low lane first.
++#[inline(always)]
++fn push_word8_uncapped_raw(w: u128, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    let (c0, c1, c2, c3, c4, c5, c6, c7) = word_chunks(swap_word(w, k), k);
++    push_raw_candidate_uncapped(c0, ref coeffs, k);
++    push_raw_candidate_uncapped(c1, ref coeffs, k);
++    push_raw_candidate_uncapped(c2, ref coeffs, k);
++    push_raw_candidate_uncapped(c3, ref coeffs, k);
++    push_raw_candidate_uncapped(c4, ref coeffs, k);
++    push_raw_candidate_uncapped(c5, ref coeffs, k);
++    push_raw_candidate_uncapped(c6, ref coeffs, k);
++    push_raw_candidate_uncapped(c7, ref coeffs, k);
++}
++
++#[inline(always)]
++fn push_word8_capped_raw(w: u128, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    let (c0, c1, c2, c3, c4, c5, c6, c7) = word_chunks(swap_word(w, k), k);
++    push_raw_candidate(c0, ref coeffs, k);
++    push_raw_candidate(c1, ref coeffs, k);
++    push_raw_candidate(c2, ref coeffs, k);
++    push_raw_candidate(c3, ref coeffs, k);
++    push_raw_candidate(c4, ref coeffs, k);
++    push_raw_candidate(c5, ref coeffs, k);
++    push_raw_candidate(c6, ref coeffs, k);
++    push_raw_candidate(c7, ref coeffs, k);
++}
++
++#[inline(always)]
++fn push_word8_raw(w: u128, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    if coeffs.len() <= 512 - 8 {
++        push_word8_uncapped_raw(w, ref coeffs, k);
++    } else {
++        push_word8_capped_raw(w, ref coeffs, k);
++    }
++}
++
++#[inline(always)]
++fn push4_uncapped_raw(c0: Word16, c1: Word16, c2: Word16, c3: Word16, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    push_raw_candidate_uncapped(c0, ref coeffs, k);
++    push_raw_candidate_uncapped(c1, ref coeffs, k);
++    push_raw_candidate_uncapped(c2, ref coeffs, k);
++    push_raw_candidate_uncapped(c3, ref coeffs, k);
++}
++
++#[inline(always)]
++fn push4_raw(c0: Word16, c1: Word16, c2: Word16, c3: Word16, ref coeffs: Array<u16>, k: SqueezeConsts) {
++    if coeffs.len() <= 512 - 4 {
++        push4_uncapped_raw(c0, c1, c2, c3, ref coeffs, k);
++    } else {
++        push_raw_candidate(c0, ref coeffs, k);
++        push_raw_candidate(c1, ref coeffs, k);
++        push_raw_candidate(c2, ref coeffs, k);
++        push_raw_candidate(c3, ref coeffs, k);
++    }
++}
++
++/// Read the 17 rate lanes of a squeezed block, in order, from the packed state: words
++/// (0, 1), (2, 3), (5, 6), (7, 8), (10, 11), (12, 13), (15, 16) are swapped and peeled
++/// whole, each just before its candidates; lanes 4 and 9 come from the column-4 pair
++/// (4, 9), and lane 14 from (14, 19).
++#[inline(always)]
++fn push_block_raw(state: @[u128; 13], ref coeffs: Array<u16>, k: SqueezeConsts) {
++    let [u0, u1, u2, u3, _, v0, v1, v2, _, _, g01, g23, _] = *state;
++    let (g0, g1, g2, g3, g4, g5, g6, g7) = word_chunks(swap_word(g01, k), k);
++    if coeffs.len() <= 512 - 68 {
++        // A block yields at most 68 candidates, so it cannot reach 512 from here: no
++        // per-candidate cap check.
++        push_word8_uncapped_raw(u0, ref coeffs, k);
++        push_word8_uncapped_raw(v0, ref coeffs, k);
++        push4_uncapped_raw(g0, g1, g2, g3, ref coeffs, k);
++        push_word8_uncapped_raw(u1, ref coeffs, k);
++        push_word8_uncapped_raw(v1, ref coeffs, k);
++        push4_uncapped_raw(g4, g5, g6, g7, ref coeffs, k);
++        push_word8_uncapped_raw(u2, ref coeffs, k);
++        push_word8_uncapped_raw(v2, ref coeffs, k);
++        let (h0, h1, h2, h3) = low_lane_chunks(swap_word(g23, k), k);
++        push4_uncapped_raw(h0, h1, h2, h3, ref coeffs, k);
++        push_word8_uncapped_raw(u3, ref coeffs, k);
++    } else {
++        // The last block: a group needs the per-candidate cap check only when it could
++        // reach 512.
++        push_word8_raw(u0, ref coeffs, k);
++        push_word8_raw(v0, ref coeffs, k);
++        push4_raw(g0, g1, g2, g3, ref coeffs, k);
++        push_word8_raw(u1, ref coeffs, k);
++        push_word8_raw(v1, ref coeffs, k);
++        push4_raw(g4, g5, g6, g7, ref coeffs, k);
++        push_word8_raw(u2, ref coeffs, k);
++        push_word8_raw(v2, ref coeffs, k);
++        let (h0, h1, h2, h3) = low_lane_chunks(swap_word(g23, k), k);
++        push4_raw(h0, h1, h2, h3, ref coeffs, k);
++        push_word8_raw(u3, ref coeffs, k);
++    }
++}
++
++/// [`hash_to_point_shake_512`] for the verifier: the same accepted candidates, in the same
++/// order, but not reduced mod q (each is below 5q). The verifier uses the message point only
++/// in the norm, as `msg - t` mod q, where any representative mod q gives the same value.
++pub(crate) fn hash_to_point_shake_512_raw(
++    message_hash: felt252, salt_a: felt252, salt_b: felt252,
++) -> Option<Array<u16>> {
++    let sa: u256 = salt_a.into();
++    let sb: u256 = salt_b.into();
++    if sa >= TWO_POW_160 || sb >= TWO_POW_160 {
++        return None;
++    }
++    let mh: u256 = message_hash.into();
++
++    // The absorbed block, assembled directly as little-endian lanes: bytes 0..40 hold
++    // the salt, 40..72 the message hash, byte 72 the 0x1F SHAKE domain byte, and byte
++    // 135 the pad10*1 terminator. The sponge state starts at zero, so this first
++    // (and only) absorbed block IS the pre-permutation state.
++    let two64: NonZero<u128> = 0x10000000000000000_u128.try_into().unwrap();
++    let two32: NonZero<u128> = 0x100000000_u128.try_into().unwrap();
++    let (a1, a0) = DivRem::div_rem(sa.low, two64); // salt_a bytes 0..8 and 8..16
++    let (sbq, sb0) = DivRem::div_rem(sb.low, two32); // salt_b bytes 0..4 and 4..16
++    let (sb12, l3) = DivRem::div_rem(sbq, two64); // salt_b bytes 4..12 -> lane 3
++    let (m1, m0) = DivRem::div_rem(mh.low, two64);
++    let (m3, m2) = DivRem::div_rem(mh.high, two64);
++    // Lane 2: salt_a bytes 16..20 in the low half, salt_b bytes 0..4 in the high half.
++    let l2: u128 = (sa.high.into() + sb0.into() * 0x100000000).try_into().unwrap();
++    // Lane 4: salt_b bytes 12..16 in the low half, salt_b bytes 16..20 in the high half.
++    let l4: u128 = (sb12.into() + sb.high.into() * 0x100000000).try_into().unwrap();
++
++    // The same block in the packed layout of `keccak_f1600_packed`: per row `y`, lanes
++    // 5y, 5y + 1 in one word and 5y + 2, 5y + 3 in another, then column 4 as the pairs
++    // (4, 9), (14, 19) and lane 24. Only lane 16 (the pad terminator) is set beyond lane 9.
++    let mut state = keccak_f1600_packed(
++        [
++            pack(a0, a1), pack(m0, m1), 0, 0x80000000000000000000000000000000, 0, pack(l2, l3),
++            pack(m2, m3), 0, 0, 0, pack(l4, 0x1f), 0, 0,
++        ],
++    );
++
++    let mut coeffs: Array<u16> = array![];
++    let k = squeeze_consts();
++    loop {
++        push_block_raw(@state, ref coeffs, k);
++        if coeffs.len() == 512 {
++            break;
++        }
++        state = keccak_f1600_packed(state);
++    }
++    Some(coeffs)
++}
+diff --git a/crates/falcon_512/src/hashing/shake256.cairo b/crates/falcon_512/src/hashing/shake256.cairo
+index e212de61ca63117656726f326fd7cd023649907d..ab224c28143620324ec3142689ba95c95f4a57f3 100644
+--- a/crates/falcon_512/src/hashing/shake256.cairo
++++ b/crates/falcon_512/src/hashing/shake256.cairo
+@@ -16,19 +16,20 @@
+ //! - lanes are carried as `u128` — the bitwise builtin's native operand width — so
+ //!   XOR/AND need no per-operation downcast. The `< 2^64` lane invariant is
+ //!   maintained structurally: XOR/AND of 64-bit values is 64-bit, complements are
+-//!   `MASK64 - b` (exact on 64-bit values, no builtin), and rotations reassemble
+-//!   disjoint bit ranges below bit 64;
++//!   taken over 128 bits as a bounded `2^128 - 1 - b` (exact for every `u128`, so no
++//!   runtime check and no builtin) and only ever ANDed with a 64-bit lane, which clears
++//!   the high bits, and rotations reassemble disjoint bit ranges below bit 64;
+ //! - rotations are division-free: every rotation amount is baked in as its power of
+-//!   two, so a left-rotate is one felt252 multiply and one u128 `div_rem` by 2^64 —
+-//!   the wrapped high bits and the shifted low bits occupy disjoint positions, so
+-//!   their sum is the rotation.
++//!   two, so a left-rotate is one bounded-integer multiply and one bounded `div_rem` by
++//!   2^64 — the wrapped high bits and the shifted low bits occupy disjoint positions, so
++//!   their sum is the rotation. Being bounded integers, the multiply, the sum and the
++//!   conversion back to `u128` need no runtime check.
+ //!
+ //! [`keccak_f1600`] is shared with the hash-to-point squeezer
+ //! (`hash_to_point::hash_to_point_shake_512`), which drives the sponge lazily and
+ //! reads candidates straight from the rate lanes; the byte-oriented [`shake256`] here
+ //! is the generic XOF, pinned to the FIPS 202 known-answer vectors below.
+ 
+-const MASK64: u128 = 0xffffffffffffffff;
+ const RATE_LANES: u32 = 17; // 136 bytes / 8
+ const RATE_BYTES: u32 = 136;
+ 
+@@ -42,114 +43,994 @@ const ROUND_CONSTANTS: [u128; 24] = [
+     0x8000000080008081, 0x8000000000008080, 0x0000000080000001, 0x8000000080008008,
+ ];
+ 
+-/// Rotate a 64-bit lane left, given `pow = 2^r` with 0 < r < 64. The widened felt
+-/// product `x * 2^r < 2^127` splits at bit 64 into the bits that stay (`lo`) and the
+-/// bits that wrap to the bottom (`hi`); they occupy disjoint positions, so `lo + hi`
+-/// is the rotation.
++use corelib_imports::bounded_int::{
++    AddHelper, BoundedInt, DivRemHelper, MulHelper, UnitInt, bounded_int, upcast,
++};
++#[feature("bounded-int-utils")]
++use core::internal::bounded_int::SubHelper;
++
++/// A rotation's power of two, 2^1 to 2^63.
++type Pow = BoundedInt<2, 0x8000000000000000>;
++/// A lane (< 2^128 as typed) times a power: below (2^128 - 1) * 2^63.
++type Wide = BoundedInt<0, 0x7fffffffffffffffffffffffffffffff8000000000000000>;
++type Two64 = UnitInt<0x10000000000000000>;
++type High = BoundedInt<0, 0x7fffffffffffffffffffffffffffffff>;
++type Low = BoundedInt<0, 0xffffffffffffffff>;
++type Rotated = BoundedInt<0, 0x8000000000000000fffffffffffffffe>;
++const TWO64_NZ: NonZero<Two64> = 0x10000000000000000;
++
++impl MulLanePow of MulHelper<u128, Pow> {
++    type Result = Wide;
++}
++impl DivRemWideTwo64 of DivRemHelper<Wide, Two64> {
++    type DivT = High;
++    type RemT = Low;
++}
++impl AddHighLow of AddHelper<High, Low> {
++    type Result = Rotated;
++}
++
++type Mask128 = UnitInt<0xffffffffffffffffffffffffffffffff>;
++const MASK128: Mask128 = 0xffffffffffffffffffffffffffffffff;
++
++impl SubMaskLane of SubHelper<Mask128, u128> {
++    type Result = BoundedInt<0, 0xffffffffffffffffffffffffffffffff>;
++}
++
++/// `2^128 - 1 - x`: the 128-bit complement, exact for every `u128` and so with no runtime
++/// check. Only ever ANDed with a 64-bit lane, which clears the high bits it sets.
+ #[inline(always)]
+-fn rotl(x: u128, pow: felt252, two64: NonZero<u128>) -> u128 {
+-    let wide: u128 = (x.into() * pow).try_into().unwrap();
+-    let (hi, lo) = DivRem::div_rem(wide, two64);
+-    lo + hi
++fn not128(x: u128) -> u128 {
++    upcast(bounded_int::sub(MASK128, x))
+ }
+ 
+-/// Keccak-f[1600]: 24 rounds of θ, ρ, π, χ, ι on the 25-lane state, fully unrolled
+-/// over lane locals. The ρ+π terms read `b[dst] = rotl(a[src] ^ d[src mod 5], ρ[dst])`
+-/// with the π source indices and ρ offsets from FIPS 202, precomposed per destination.
+-pub(crate) fn keccak_f1600(state: [u128; 25]) -> [u128; 25] {
+-    let two64: NonZero<u128> = 0x10000000000000000_u128.try_into().unwrap();
+-    let mut s = state;
+-    for rc in ROUND_CONSTANTS.span() {
+-        let rc = *rc;
+-        let [
+-            s00,
+-            s01,
+-            s02,
+-            s03,
+-            s04,
+-            s05,
+-            s06,
+-            s07,
+-            s08,
+-            s09,
+-            s10,
+-            s11,
+-            s12,
+-            s13,
+-            s14,
+-            s15,
+-            s16,
+-            s17,
+-            s18,
+-            s19,
+-            s20,
+-            s21,
+-            s22,
+-            s23,
+-            s24,
+-        ] =
+-            s;
+-
+-        // theta: column parities and the per-column mixing term d[x] = c[x-1] ^ rotl(c[x+1], 1).
+-        let c0 = s00 ^ s05 ^ s10 ^ s15 ^ s20;
+-        let c1 = s01 ^ s06 ^ s11 ^ s16 ^ s21;
+-        let c2 = s02 ^ s07 ^ s12 ^ s17 ^ s22;
+-        let c3 = s03 ^ s08 ^ s13 ^ s18 ^ s23;
+-        let c4 = s04 ^ s09 ^ s14 ^ s19 ^ s24;
+-        let d0 = c4 ^ rotl(c1, 0x2, two64);
+-        let d1 = c0 ^ rotl(c2, 0x2, two64);
+-        let d2 = c1 ^ rotl(c3, 0x2, two64);
+-        let d3 = c2 ^ rotl(c4, 0x2, two64);
+-        let d4 = c3 ^ rotl(c0, 0x2, two64);
+-
+-        // theta (fused) + rho + pi, straight into destination order.
+-        let b00 = s00 ^ d0;
+-        let b01 = rotl(s06 ^ d1, 0x100000000000, two64);
+-        let b02 = rotl(s12 ^ d2, 0x80000000000, two64);
+-        let b03 = rotl(s18 ^ d3, 0x200000, two64);
+-        let b04 = rotl(s24 ^ d4, 0x4000, two64);
+-        let b05 = rotl(s03 ^ d3, 0x10000000, two64);
+-        let b06 = rotl(s09 ^ d4, 0x100000, two64);
+-        let b07 = rotl(s10 ^ d0, 0x8, two64);
+-        let b08 = rotl(s16 ^ d1, 0x200000000000, two64);
+-        let b09 = rotl(s22 ^ d2, 0x2000000000000000, two64);
+-        let b10 = rotl(s01 ^ d1, 0x2, two64);
+-        let b11 = rotl(s07 ^ d2, 0x40, two64);
+-        let b12 = rotl(s13 ^ d3, 0x2000000, two64);
+-        let b13 = rotl(s19 ^ d4, 0x100, two64);
+-        let b14 = rotl(s20 ^ d0, 0x40000, two64);
+-        let b15 = rotl(s04 ^ d4, 0x8000000, two64);
+-        let b16 = rotl(s05 ^ d0, 0x1000000000, two64);
+-        let b17 = rotl(s11 ^ d1, 0x400, two64);
+-        let b18 = rotl(s17 ^ d2, 0x8000, two64);
+-        let b19 = rotl(s23 ^ d3, 0x100000000000000, two64);
+-        let b20 = rotl(s02 ^ d2, 0x4000000000000000, two64);
+-        let b21 = rotl(s08 ^ d3, 0x80000000000000, two64);
+-        let b22 = rotl(s14 ^ d4, 0x8000000000, two64);
+-        let b23 = rotl(s15 ^ d0, 0x20000000000, two64);
+-        let b24 = rotl(s21 ^ d1, 0x4, two64);
+-
+-        // chi (complement as MASK64 - b), with iota folded into lane 0.
+-        s =
+-            [
+-                b00 ^ ((MASK64 - b01) & b02) ^ rc, b01 ^ ((MASK64 - b02) & b03),
+-                b02 ^ ((MASK64 - b03) & b04), b03 ^ ((MASK64 - b04) & b00),
+-                b04 ^ ((MASK64 - b00) & b01), b05 ^ ((MASK64 - b06) & b07),
+-                b06 ^ ((MASK64 - b07) & b08), b07 ^ ((MASK64 - b08) & b09),
+-                b08 ^ ((MASK64 - b09) & b05), b09 ^ ((MASK64 - b05) & b06),
+-                b10 ^ ((MASK64 - b11) & b12), b11 ^ ((MASK64 - b12) & b13),
+-                b12 ^ ((MASK64 - b13) & b14), b13 ^ ((MASK64 - b14) & b10),
+-                b14 ^ ((MASK64 - b10) & b11), b15 ^ ((MASK64 - b16) & b17),
+-                b16 ^ ((MASK64 - b17) & b18), b17 ^ ((MASK64 - b18) & b19),
+-                b18 ^ ((MASK64 - b19) & b15), b19 ^ ((MASK64 - b15) & b16),
+-                b20 ^ ((MASK64 - b21) & b22), b21 ^ ((MASK64 - b22) & b23),
+-                b22 ^ ((MASK64 - b23) & b24), b23 ^ ((MASK64 - b24) & b20),
+-                b24 ^ ((MASK64 - b20) & b21),
+-            ];
++/// Rotate a 64-bit lane left, given `pow = 2^r` with 0 < r < 64. The product `x * 2^r`
++/// splits at bit 64 into the bits that stay (`low`) and the bits that wrap to the bottom
++/// (`high`); they occupy disjoint positions, so `high + low` is the rotation. The product,
++/// the sum and the final upcast are bounded-integer operations whose ranges are checked by
++/// type, so the split at bit 64 is the only checked operation.
++#[inline(always)]
++fn rotl(x: u128, pow: Pow) -> u128 {
++    let wide = bounded_int::mul(x, pow);
++    let (high, low) = bounded_int::div_rem(wide, TWO64_NZ);
++    upcast(bounded_int::add(high, low))
++}
++
++/// `w` as its high and low 64-bit halves (both exactly 64-bit by type).
++#[inline(always)]
++fn split(w: u128) -> (u128, u128) {
++    let (high, low) = bounded_int::div_rem(w, TWO64_NZ);
++    (upcast(high), upcast(low))
++}
++
++/// `lo + hi * 2^64` for two lanes below 2^64.
++#[inline(always)]
++pub(crate) fn pack(lo: u128, hi: u128) -> u128 {
++    let packed: felt252 = lo.into() + hi.into() * 0x10000000000000000;
++    packed.try_into().unwrap()
++}
++
++impl DivRemU128Two64 of DivRemHelper<u128, Two64> {
++    type DivT = Low;
++    type RemT = Low;
++}
++
++/// Keccak-f[1600]: 24 rounds of θ, ρ, π, χ, ι, fully unrolled over lane locals, on a
++/// packed state: per column `x`, `p0[x]` holds rows 0 and 1 (low and high 64 bits), `p1[x]`
++/// rows 2 and 3, and `q[x]` row 4. One bitwise call then handles two lanes in θ's column
++/// sums, in applying θ's mixing term, and in χ (which works along rows, so the two halves of a
++/// packed word never interact). Lanes are split only for the ρ rotations and repacked for χ.
++
++/// `w` as its high and low 64-bit halves, kept as exact 64-bit bounded integers.
++#[inline(always)]
++fn split_exact(w: u128) -> (Low, Low) {
++    bounded_int::div_rem(w, TWO64_NZ)
++}
++
++type Two64Unit = UnitInt<0x10000000000000000>;
++type HiTimes2_64 = BoundedInt<0, 0xffffffffffffffff0000000000000000>;
++impl MulLowTwo64 of MulHelper<Low, Two64Unit> {
++    type Result = HiTimes2_64;
++}
++impl AddLowHiTimes of AddHelper<Low, HiTimes2_64> {
++    type Result = BoundedInt<0, 0xffffffffffffffffffffffffffffffff>;
++}
++
++/// `lo + hi * 2^64` for two exact 64-bit lanes: the sum is below 2^128 by type, so no
++/// runtime check.
++#[inline(always)]
++fn pack_exact(lo: Low, hi: Low) -> u128 {
++    let two64: Two64Unit = 0x10000000000000000;
++    upcast(bounded_int::add(lo, bounded_int::mul(hi, two64)))
++}
++
++type RotQ1 = BoundedInt<0, 1>;
++type RotR1 = BoundedInt<0, 9223372036854775807>;
++type RotM1 = BoundedInt<0, 18446744073709551614>;
++impl DivRemRot1 of DivRemHelper<Low, UnitInt<9223372036854775808>> {
++    type DivT = RotQ1;
++    type RemT = RotR1;
++}
++impl MulRot1 of MulHelper<RotR1, UnitInt<2>> {
++    type Result = RotM1;
++}
++impl AddRot1 of AddHelper<RotM1, RotQ1> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_1(x: Low) -> Low {
++    let d: NonZero<UnitInt<9223372036854775808>> = 9223372036854775808;
++    let m: UnitInt<2> = 2;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ3 = BoundedInt<0, 7>;
++type RotR3 = BoundedInt<0, 2305843009213693951>;
++type RotM3 = BoundedInt<0, 18446744073709551608>;
++impl DivRemRot3 of DivRemHelper<Low, UnitInt<2305843009213693952>> {
++    type DivT = RotQ3;
++    type RemT = RotR3;
++}
++impl MulRot3 of MulHelper<RotR3, UnitInt<8>> {
++    type Result = RotM3;
++}
++impl AddRot3 of AddHelper<RotM3, RotQ3> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_3(x: Low) -> Low {
++    let d: NonZero<UnitInt<2305843009213693952>> = 2305843009213693952;
++    let m: UnitInt<8> = 8;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ6 = BoundedInt<0, 63>;
++type RotR6 = BoundedInt<0, 288230376151711743>;
++type RotM6 = BoundedInt<0, 18446744073709551552>;
++impl DivRemRot6 of DivRemHelper<Low, UnitInt<288230376151711744>> {
++    type DivT = RotQ6;
++    type RemT = RotR6;
++}
++impl MulRot6 of MulHelper<RotR6, UnitInt<64>> {
++    type Result = RotM6;
++}
++impl AddRot6 of AddHelper<RotM6, RotQ6> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_6(x: Low) -> Low {
++    let d: NonZero<UnitInt<288230376151711744>> = 288230376151711744;
++    let m: UnitInt<64> = 64;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ8 = BoundedInt<0, 255>;
++type RotR8 = BoundedInt<0, 72057594037927935>;
++type RotM8 = BoundedInt<0, 18446744073709551360>;
++impl DivRemRot8 of DivRemHelper<Low, UnitInt<72057594037927936>> {
++    type DivT = RotQ8;
++    type RemT = RotR8;
++}
++impl MulRot8 of MulHelper<RotR8, UnitInt<256>> {
++    type Result = RotM8;
++}
++impl AddRot8 of AddHelper<RotM8, RotQ8> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_8(x: Low) -> Low {
++    let d: NonZero<UnitInt<72057594037927936>> = 72057594037927936;
++    let m: UnitInt<256> = 256;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ10 = BoundedInt<0, 1023>;
++type RotR10 = BoundedInt<0, 18014398509481983>;
++type RotM10 = BoundedInt<0, 18446744073709550592>;
++impl DivRemRot10 of DivRemHelper<Low, UnitInt<18014398509481984>> {
++    type DivT = RotQ10;
++    type RemT = RotR10;
++}
++impl MulRot10 of MulHelper<RotR10, UnitInt<1024>> {
++    type Result = RotM10;
++}
++impl AddRot10 of AddHelper<RotM10, RotQ10> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_10(x: Low) -> Low {
++    let d: NonZero<UnitInt<18014398509481984>> = 18014398509481984;
++    let m: UnitInt<1024> = 1024;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ15 = BoundedInt<0, 32767>;
++type RotR15 = BoundedInt<0, 562949953421311>;
++type RotM15 = BoundedInt<0, 18446744073709518848>;
++impl DivRemRot15 of DivRemHelper<Low, UnitInt<562949953421312>> {
++    type DivT = RotQ15;
++    type RemT = RotR15;
++}
++impl MulRot15 of MulHelper<RotR15, UnitInt<32768>> {
++    type Result = RotM15;
++}
++impl AddRot15 of AddHelper<RotM15, RotQ15> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_15(x: Low) -> Low {
++    let d: NonZero<UnitInt<562949953421312>> = 562949953421312;
++    let m: UnitInt<32768> = 32768;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ20 = BoundedInt<0, 1048575>;
++type RotR20 = BoundedInt<0, 17592186044415>;
++type RotM20 = BoundedInt<0, 18446744073708503040>;
++impl DivRemRot20 of DivRemHelper<Low, UnitInt<17592186044416>> {
++    type DivT = RotQ20;
++    type RemT = RotR20;
++}
++impl MulRot20 of MulHelper<RotR20, UnitInt<1048576>> {
++    type Result = RotM20;
++}
++impl AddRot20 of AddHelper<RotM20, RotQ20> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_20(x: Low) -> Low {
++    let d: NonZero<UnitInt<17592186044416>> = 17592186044416;
++    let m: UnitInt<1048576> = 1048576;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ21 = BoundedInt<0, 2097151>;
++type RotR21 = BoundedInt<0, 8796093022207>;
++type RotM21 = BoundedInt<0, 18446744073707454464>;
++impl DivRemRot21 of DivRemHelper<Low, UnitInt<8796093022208>> {
++    type DivT = RotQ21;
++    type RemT = RotR21;
++}
++impl MulRot21 of MulHelper<RotR21, UnitInt<2097152>> {
++    type Result = RotM21;
++}
++impl AddRot21 of AddHelper<RotM21, RotQ21> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_21(x: Low) -> Low {
++    let d: NonZero<UnitInt<8796093022208>> = 8796093022208;
++    let m: UnitInt<2097152> = 2097152;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ25 = BoundedInt<0, 33554431>;
++type RotR25 = BoundedInt<0, 549755813887>;
++type RotM25 = BoundedInt<0, 18446744073675997184>;
++impl DivRemRot25 of DivRemHelper<Low, UnitInt<549755813888>> {
++    type DivT = RotQ25;
++    type RemT = RotR25;
++}
++impl MulRot25 of MulHelper<RotR25, UnitInt<33554432>> {
++    type Result = RotM25;
++}
++impl AddRot25 of AddHelper<RotM25, RotQ25> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_25(x: Low) -> Low {
++    let d: NonZero<UnitInt<549755813888>> = 549755813888;
++    let m: UnitInt<33554432> = 33554432;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ27 = BoundedInt<0, 134217727>;
++type RotR27 = BoundedInt<0, 137438953471>;
++type RotM27 = BoundedInt<0, 18446744073575333888>;
++impl DivRemRot27 of DivRemHelper<Low, UnitInt<137438953472>> {
++    type DivT = RotQ27;
++    type RemT = RotR27;
++}
++impl MulRot27 of MulHelper<RotR27, UnitInt<134217728>> {
++    type Result = RotM27;
++}
++impl AddRot27 of AddHelper<RotM27, RotQ27> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_27(x: Low) -> Low {
++    let d: NonZero<UnitInt<137438953472>> = 137438953472;
++    let m: UnitInt<134217728> = 134217728;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ28 = BoundedInt<0, 268435455>;
++type RotR28 = BoundedInt<0, 68719476735>;
++type RotM28 = BoundedInt<0, 18446744073441116160>;
++impl DivRemRot28 of DivRemHelper<Low, UnitInt<68719476736>> {
++    type DivT = RotQ28;
++    type RemT = RotR28;
++}
++impl MulRot28 of MulHelper<RotR28, UnitInt<268435456>> {
++    type Result = RotM28;
++}
++impl AddRot28 of AddHelper<RotM28, RotQ28> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_28(x: Low) -> Low {
++    let d: NonZero<UnitInt<68719476736>> = 68719476736;
++    let m: UnitInt<268435456> = 268435456;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ36 = BoundedInt<0, 68719476735>;
++type RotR36 = BoundedInt<0, 268435455>;
++type RotM36 = BoundedInt<0, 18446744004990074880>;
++impl DivRemRot36 of DivRemHelper<Low, UnitInt<268435456>> {
++    type DivT = RotQ36;
++    type RemT = RotR36;
++}
++impl MulRot36 of MulHelper<RotR36, UnitInt<68719476736>> {
++    type Result = RotM36;
++}
++impl AddRot36 of AddHelper<RotM36, RotQ36> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_36(x: Low) -> Low {
++    let d: NonZero<UnitInt<268435456>> = 268435456;
++    let m: UnitInt<68719476736> = 68719476736;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ39 = BoundedInt<0, 549755813887>;
++type RotR39 = BoundedInt<0, 33554431>;
++type RotM39 = BoundedInt<0, 18446743523953737728>;
++impl DivRemRot39 of DivRemHelper<Low, UnitInt<33554432>> {
++    type DivT = RotQ39;
++    type RemT = RotR39;
++}
++impl MulRot39 of MulHelper<RotR39, UnitInt<549755813888>> {
++    type Result = RotM39;
++}
++impl AddRot39 of AddHelper<RotM39, RotQ39> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_39(x: Low) -> Low {
++    let d: NonZero<UnitInt<33554432>> = 33554432;
++    let m: UnitInt<549755813888> = 549755813888;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ41 = BoundedInt<0, 2199023255551>;
++type RotR41 = BoundedInt<0, 8388607>;
++type RotM41 = BoundedInt<0, 18446741874686296064>;
++impl DivRemRot41 of DivRemHelper<Low, UnitInt<8388608>> {
++    type DivT = RotQ41;
++    type RemT = RotR41;
++}
++impl MulRot41 of MulHelper<RotR41, UnitInt<2199023255552>> {
++    type Result = RotM41;
++}
++impl AddRot41 of AddHelper<RotM41, RotQ41> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_41(x: Low) -> Low {
++    let d: NonZero<UnitInt<8388608>> = 8388608;
++    let m: UnitInt<2199023255552> = 2199023255552;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ43 = BoundedInt<0, 8796093022207>;
++type RotR43 = BoundedInt<0, 2097151>;
++type RotM43 = BoundedInt<0, 18446735277616529408>;
++impl DivRemRot43 of DivRemHelper<Low, UnitInt<2097152>> {
++    type DivT = RotQ43;
++    type RemT = RotR43;
++}
++impl MulRot43 of MulHelper<RotR43, UnitInt<8796093022208>> {
++    type Result = RotM43;
++}
++impl AddRot43 of AddHelper<RotM43, RotQ43> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_43(x: Low) -> Low {
++    let d: NonZero<UnitInt<2097152>> = 2097152;
++    let m: UnitInt<8796093022208> = 8796093022208;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ44 = BoundedInt<0, 17592186044415>;
++type RotR44 = BoundedInt<0, 1048575>;
++type RotM44 = BoundedInt<0, 18446726481523507200>;
++impl DivRemRot44 of DivRemHelper<Low, UnitInt<1048576>> {
++    type DivT = RotQ44;
++    type RemT = RotR44;
++}
++impl MulRot44 of MulHelper<RotR44, UnitInt<17592186044416>> {
++    type Result = RotM44;
++}
++impl AddRot44 of AddHelper<RotM44, RotQ44> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_44(x: Low) -> Low {
++    let d: NonZero<UnitInt<1048576>> = 1048576;
++    let m: UnitInt<17592186044416> = 17592186044416;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ45 = BoundedInt<0, 35184372088831>;
++type RotR45 = BoundedInt<0, 524287>;
++type RotM45 = BoundedInt<0, 18446708889337462784>;
++impl DivRemRot45 of DivRemHelper<Low, UnitInt<524288>> {
++    type DivT = RotQ45;
++    type RemT = RotR45;
++}
++impl MulRot45 of MulHelper<RotR45, UnitInt<35184372088832>> {
++    type Result = RotM45;
++}
++impl AddRot45 of AddHelper<RotM45, RotQ45> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_45(x: Low) -> Low {
++    let d: NonZero<UnitInt<524288>> = 524288;
++    let m: UnitInt<35184372088832> = 35184372088832;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ55 = BoundedInt<0, 36028797018963967>;
++type RotR55 = BoundedInt<0, 511>;
++type RotM55 = BoundedInt<0, 18410715276690587648>;
++impl DivRemRot55 of DivRemHelper<Low, UnitInt<512>> {
++    type DivT = RotQ55;
++    type RemT = RotR55;
++}
++impl MulRot55 of MulHelper<RotR55, UnitInt<36028797018963968>> {
++    type Result = RotM55;
++}
++impl AddRot55 of AddHelper<RotM55, RotQ55> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_55(x: Low) -> Low {
++    let d: NonZero<UnitInt<512>> = 512;
++    let m: UnitInt<36028797018963968> = 36028797018963968;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ62 = BoundedInt<0, 4611686018427387903>;
++type RotR62 = BoundedInt<0, 3>;
++type RotM62 = BoundedInt<0, 13835058055282163712>;
++impl DivRemRot62 of DivRemHelper<Low, UnitInt<4>> {
++    type DivT = RotQ62;
++    type RemT = RotR62;
++}
++impl MulRot62 of MulHelper<RotR62, UnitInt<4611686018427387904>> {
++    type Result = RotM62;
++}
++impl AddRot62 of AddHelper<RotM62, RotQ62> {
++    type Result = Low;
++}
++#[inline(always)]
++fn rotl_exact_62(x: Low) -> Low {
++    let d: NonZero<UnitInt<4>> = 4;
++    let m: UnitInt<4611686018427387904> = 4611686018427387904;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ2 = BoundedInt<0, 3>;
++type RotR2 = BoundedInt<0, 4611686018427387903>;
++type RotM2 = BoundedInt<0, 18446744073709551612>;
++impl DivRemRot2 of DivRemHelper<Low, UnitInt<4611686018427387904>> {
++    type DivT = RotQ2;
++    type RemT = RotR2;
++}
++impl MulRot2 of MulHelper<RotR2, UnitInt<4>> {
++    type Result = RotM2;
++}
++impl AddRot2 of AddHelper<RotM2, RotQ2> {
++    type Result = Low;
++}
++
++#[inline(always)]
++fn rotl_exact_k_2(x: Low, d: NonZero<UnitInt<4611686018427387904>>) -> Low {
++    let m: UnitInt<4> = 4;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ18 = BoundedInt<0, 262143>;
++type RotR18 = BoundedInt<0, 70368744177663>;
++type RotM18 = BoundedInt<0, 18446744073709289472>;
++impl DivRemRot18 of DivRemHelper<Low, UnitInt<70368744177664>> {
++    type DivT = RotQ18;
++    type RemT = RotR18;
++}
++impl MulRot18 of MulHelper<RotR18, UnitInt<262144>> {
++    type Result = RotM18;
++}
++impl AddRot18 of AddHelper<RotM18, RotQ18> {
++    type Result = Low;
++}
++
++#[inline(always)]
++fn rotl_exact_k_18(x: Low, d: NonZero<UnitInt<70368744177664>>) -> Low {
++    let m: UnitInt<262144> = 262144;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ56 = BoundedInt<0, 72057594037927935>;
++type RotR56 = BoundedInt<0, 255>;
++type RotM56 = BoundedInt<0, 18374686479671623680>;
++impl DivRemRot56 of DivRemHelper<Low, UnitInt<256>> {
++    type DivT = RotQ56;
++    type RemT = RotR56;
++}
++impl MulRot56 of MulHelper<RotR56, UnitInt<72057594037927936>> {
++    type Result = RotM56;
++}
++impl AddRot56 of AddHelper<RotM56, RotQ56> {
++    type Result = Low;
++}
++
++#[inline(always)]
++fn rotl_exact_k_56(x: Low, d: NonZero<UnitInt<256>>) -> Low {
++    let m: UnitInt<72057594037927936> = 72057594037927936;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++type RotQ61 = BoundedInt<0, 2305843009213693951>;
++type RotR61 = BoundedInt<0, 7>;
++type RotM61 = BoundedInt<0, 16140901064495857664>;
++impl DivRemRot61 of DivRemHelper<Low, UnitInt<8>> {
++    type DivT = RotQ61;
++    type RemT = RotR61;
++}
++impl MulRot61 of MulHelper<RotR61, UnitInt<2305843009213693952>> {
++    type Result = RotM61;
++}
++impl AddRot61 of AddHelper<RotM61, RotQ61> {
++    type Result = Low;
++}
++
++#[inline(always)]
++fn rotl_exact_k_61(x: Low, d: NonZero<UnitInt<8>>) -> Low {
++    let m: UnitInt<2305843009213693952> = 2305843009213693952;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++/// The constants of a round, built by a non-inlined call so that inside the round loop
++/// they are cells (loop parameters) rather than immediates: a division or subtraction
++/// can then use them directly instead of first copying the constant with `store_temp`.
++#[derive(Copy, Drop)]
++struct RoundConsts {
++    two64: NonZero<Two64>,
++    mask: Mask128,
++    d2: NonZero<UnitInt<4611686018427387904>>,
++    d18: NonZero<UnitInt<70368744177664>>,
++    d56: NonZero<UnitInt<256>>,
++    d61: NonZero<UnitInt<8>>,
++    d1: NonZero<UnitInt<9223372036854775808>>,
++    d3: NonZero<UnitInt<2305843009213693952>>,
++    d6: NonZero<UnitInt<288230376151711744>>,
++    d8: NonZero<UnitInt<72057594037927936>>,
++    d10: NonZero<UnitInt<18014398509481984>>,
++    d15: NonZero<UnitInt<562949953421312>>,
++    d20: NonZero<UnitInt<17592186044416>>,
++    d21: NonZero<UnitInt<8796093022208>>,
++    d25: NonZero<UnitInt<549755813888>>,
++    d27: NonZero<UnitInt<137438953472>>,
++    d28: NonZero<UnitInt<68719476736>>,
++    d36: NonZero<UnitInt<268435456>>,
++    d39: NonZero<UnitInt<33554432>>,
++    d41: NonZero<UnitInt<8388608>>,
++    d43: NonZero<UnitInt<2097152>>,
++    d44: NonZero<UnitInt<1048576>>,
++    d45: NonZero<UnitInt<524288>>,
++    d55: NonZero<UnitInt<512>>,
++    d62: NonZero<UnitInt<4>>,
++}
++
++#[inline(never)]
++fn round_consts() -> RoundConsts {
++    RoundConsts {
++        two64: TWO64_NZ,
++        mask: MASK128,
++        d2: 4611686018427387904,
++        d18: 70368744177664,
++        d56: 256,
++        d61: 8,
++        d1: 9223372036854775808,
++        d3: 2305843009213693952,
++        d6: 288230376151711744,
++        d8: 72057594037927936,
++        d10: 18014398509481984,
++        d15: 562949953421312,
++        d20: 17592186044416,
++        d21: 8796093022208,
++        d25: 549755813888,
++        d27: 137438953472,
++        d28: 68719476736,
++        d36: 268435456,
++        d39: 33554432,
++        d41: 8388608,
++        d43: 2097152,
++        d44: 1048576,
++        d45: 524288,
++        d55: 512,
++        d62: 4,
+     }
+-    s
+ }
+ 
++#[inline(always)]
++fn not128_k(x: u128, mask: Mask128) -> u128 {
++    upcast(bounded_int::sub(mask, x))
++}
++
++#[inline(always)]
++fn rotl_k(x: u128, pow: Pow, two64: NonZero<Two64>) -> u128 {
++    let wide = bounded_int::mul(x, pow);
++    let (high, low) = bounded_int::div_rem(wide, two64);
++    upcast(bounded_int::add(high, low))
++}
++
++#[inline(always)]
++fn split_k(w: u128, two64: NonZero<Two64>) -> (u128, u128) {
++    let (high, low) = bounded_int::div_rem(w, two64);
++    (upcast(high), upcast(low))
++}
++
++#[inline(always)]
++fn split_exact_k(w: u128, two64: NonZero<Two64>) -> (Low, Low) {
++    bounded_int::div_rem(w, two64)
++}
++
++#[inline(always)]
++fn rotl_exact_k_1(x: Low, d: NonZero<UnitInt<9223372036854775808>>) -> Low {
++    let m: UnitInt<2> = 2;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_3(x: Low, d: NonZero<UnitInt<2305843009213693952>>) -> Low {
++    let m: UnitInt<8> = 8;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_6(x: Low, d: NonZero<UnitInt<288230376151711744>>) -> Low {
++    let m: UnitInt<64> = 64;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_8(x: Low, d: NonZero<UnitInt<72057594037927936>>) -> Low {
++    let m: UnitInt<256> = 256;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_10(x: Low, d: NonZero<UnitInt<18014398509481984>>) -> Low {
++    let m: UnitInt<1024> = 1024;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_15(x: Low, d: NonZero<UnitInt<562949953421312>>) -> Low {
++    let m: UnitInt<32768> = 32768;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_20(x: Low, d: NonZero<UnitInt<17592186044416>>) -> Low {
++    let m: UnitInt<1048576> = 1048576;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_21(x: Low, d: NonZero<UnitInt<8796093022208>>) -> Low {
++    let m: UnitInt<2097152> = 2097152;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_25(x: Low, d: NonZero<UnitInt<549755813888>>) -> Low {
++    let m: UnitInt<33554432> = 33554432;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_27(x: Low, d: NonZero<UnitInt<137438953472>>) -> Low {
++    let m: UnitInt<134217728> = 134217728;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_28(x: Low, d: NonZero<UnitInt<68719476736>>) -> Low {
++    let m: UnitInt<268435456> = 268435456;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_36(x: Low, d: NonZero<UnitInt<268435456>>) -> Low {
++    let m: UnitInt<68719476736> = 68719476736;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_39(x: Low, d: NonZero<UnitInt<33554432>>) -> Low {
++    let m: UnitInt<549755813888> = 549755813888;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_41(x: Low, d: NonZero<UnitInt<8388608>>) -> Low {
++    let m: UnitInt<2199023255552> = 2199023255552;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_43(x: Low, d: NonZero<UnitInt<2097152>>) -> Low {
++    let m: UnitInt<8796093022208> = 8796093022208;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_44(x: Low, d: NonZero<UnitInt<1048576>>) -> Low {
++    let m: UnitInt<17592186044416> = 17592186044416;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_45(x: Low, d: NonZero<UnitInt<524288>>) -> Low {
++    let m: UnitInt<35184372088832> = 35184372088832;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_55(x: Low, d: NonZero<UnitInt<512>>) -> Low {
++    let m: UnitInt<36028797018963968> = 36028797018963968;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++#[inline(always)]
++fn rotl_exact_k_62(x: Low, d: NonZero<UnitInt<4>>) -> Low {
++    let m: UnitInt<4611686018427387904> = 4611686018427387904;
++    let (top, rest) = bounded_int::div_rem(x, d);
++    bounded_int::add(bounded_int::mul(rest, m), top)
++}
++
++/// One Keccak-f round (theta, rho, pi, chi, iota) on the packed state, stored by column
++/// pairs: per row `y`, `u[y]` holds lanes (0, y) and (1, y) (low and high 64 bits) and `v[y]`
++/// lanes (2, y) and (3, y); column 4 is carried as the pairs ((4, 0), (4, 1)) and
++/// ((4, 2), (4, 3)) plus lane (4, 4). theta's parities of columns 0-1 and 2-3 are then
++/// XORs of whole words, and chi, which works along rows, produces the same layout.
++#[inline(always)]
++fn keccak_round(st: [u128; 13], rc: u128, k: RoundConsts) -> [u128; 13] {
++    let [u0, u1, u2, u3, u4, v0, v1, v2, v3, v4, g01, g23, g4] = st;
++    // theta: column parities, packed for columns 0-1 and 2-3.
++    let cc01 = u0 ^ u1 ^ u2 ^ u3 ^ u4;
++    let cc23 = v0 ^ v1 ^ v2 ^ v3 ^ v4;
++    let (gh, gl) = split_exact_k(g01 ^ g23, k.two64);
++    let gh: u128 = upcast(gh);
++    let gl: u128 = upcast(gl);
++    let c4 = gh ^ gl ^ g4;
++    let (c1, c0) = split_exact_k(cc01, k.two64);
++    let (c3, c2) = split_exact_k(cc23, k.two64);
++    let r0 = rotl_exact_k_1(c0, k.d1);
++    let r1 = rotl_exact_k_1(c1, k.d1);
++    let r2 = rotl_exact_k_1(c2, k.d1);
++    let r3 = rotl_exact_k_1(c3, k.d1);
++    let r4 = rotl_k(c4, 0x2, k.two64);
++    let c0u: u128 = upcast(c0);
++    let r3u: u128 = upcast(r3);
++    let c3u: u128 = upcast(c3);
++    let r0u: u128 = upcast(r0);
++    // (d0, d1), (d2, d3) packed; d4 alone and doubled for column 4's pairs.
++    let d01 = pack(c4, c0u) ^ pack_exact(r1, r2);
++    let d23 = pack_exact(c1, c2) ^ pack(r3u, r4);
++    let d4 = c3u ^ r0u;
++    let dd4 = pack(d4, d4);
++    // theta applied, then the lanes split for rho.
++    let (a01, a00) = split_exact_k(u0 ^ d01, k.two64);
++    let (a03, a02) = split_exact_k(v0 ^ d23, k.two64);
++    let (a06, a05) = split_exact_k(u1 ^ d01, k.two64);
++    let (a08, a07) = split_exact_k(v1 ^ d23, k.two64);
++    let (a11, a10) = split_exact_k(u2 ^ d01, k.two64);
++    let (a13, a12) = split_exact_k(v2 ^ d23, k.two64);
++    let (a16, a15) = split_exact_k(u3 ^ d01, k.two64);
++    let (a18, a17) = split_exact_k(v3 ^ d23, k.two64);
++    let (a21, a20) = split_exact_k(u4 ^ d01, k.two64);
++    let (a23, a22) = split_exact_k(v4 ^ d23, k.two64);
++    let (a09, a04) = split_exact_k(g01 ^ dd4, k.two64);
++    let (a19, a14) = split_exact_k(g23 ^ dd4, k.two64);
++    let a24 = g4 ^ d4;
++    // rho + pi, straight into destination order.
++    let b00 = a00;
++    let b01 = rotl_exact_k_44(a06, k.d44);
++    let b02 = rotl_exact_k_43(a12, k.d43);
++    let b03 = rotl_exact_k_21(a18, k.d21);
++    let b04 = rotl_k(a24, 0x4000, k.two64);
++    let b05 = rotl_exact_k_28(a03, k.d28);
++    let b06 = rotl_exact_k_20(a09, k.d20);
++    let b07 = rotl_exact_k_3(a10, k.d3);
++    let b08 = rotl_exact_k_45(a16, k.d45);
++    let b09 = rotl_exact_k_61(a22, k.d61);
++    let b10 = rotl_exact_k_1(a01, k.d1);
++    let b11 = rotl_exact_k_6(a07, k.d6);
++    let b12 = rotl_exact_k_25(a13, k.d25);
++    let b13 = rotl_exact_k_8(a19, k.d8);
++    let b14 = rotl_exact_k_18(a20, k.d18);
++    let b15 = rotl_exact_k_27(a04, k.d27);
++    let b16 = rotl_exact_k_36(a05, k.d36);
++    let b17 = rotl_exact_k_10(a11, k.d10);
++    let b18 = rotl_exact_k_15(a17, k.d15);
++    let b19 = rotl_exact_k_56(a23, k.d56);
++    let b20 = rotl_exact_k_62(a02, k.d62);
++    let b21 = rotl_exact_k_55(a08, k.d55);
++    let b22 = rotl_exact_k_39(a14, k.d39);
++    let b23 = rotl_exact_k_41(a15, k.d41);
++    let b24 = rotl_exact_k_2(a21, k.d2);
++    let b03u: u128 = upcast(b03);
++    let b00u: u128 = upcast(b00);
++    let b09u: u128 = upcast(b09);
++    // chi along each row on column pairs: (0, 1) needs (1, 2) and (2, 3); (2, 3) needs
++    // (3, 4) and (4, 0). Lane b04 (from the unpacked lane (4, 4)) is the only one not
++    // exact by type, so its three packs are checked.
++    let p001 = pack_exact(b00, b01);
++    let p012 = pack_exact(b01, b02);
++    let p023 = pack_exact(b02, b03);
++    let p034 = pack(b03u, b04);
++    let p040 = pack(b04, b00u);
++    let p101 = pack_exact(b05, b06);
++    let p112 = pack_exact(b06, b07);
++    let p123 = pack_exact(b07, b08);
++    let p134 = pack_exact(b08, b09);
++    let p140 = pack_exact(b09, b05);
++    let p201 = pack_exact(b10, b11);
++    let p212 = pack_exact(b11, b12);
++    let p223 = pack_exact(b12, b13);
++    let p234 = pack_exact(b13, b14);
++    let p240 = pack_exact(b14, b10);
++    let p301 = pack_exact(b15, b16);
++    let p312 = pack_exact(b16, b17);
++    let p323 = pack_exact(b17, b18);
++    let p334 = pack_exact(b18, b19);
++    let p340 = pack_exact(b19, b15);
++    let p401 = pack_exact(b20, b21);
++    let p412 = pack_exact(b21, b22);
++    let p423 = pack_exact(b22, b23);
++    let p434 = pack_exact(b23, b24);
++    let p440 = pack_exact(b24, b20);
++    // chi of column 4 on row pairs (0, 1) and (2, 3), then lane (4, 4).
++    let h01 = pack(b04, b09u);
++    let n01 = pack_exact(b00, b05);
++    let m01 = pack_exact(b01, b06);
++    let h23 = pack_exact(b14, b19);
++    let n23 = pack_exact(b10, b15);
++    let m23 = pack_exact(b11, b16);
++    let b24u: u128 = upcast(b24);
++    let b20u: u128 = upcast(b20);
++    let b21u: u128 = upcast(b21);
++    [
++        p001 ^ (not128_k(p012, k.mask) & p023) ^ rc,
++        p101 ^ (not128_k(p112, k.mask) & p123),
++        p201 ^ (not128_k(p212, k.mask) & p223),
++        p301 ^ (not128_k(p312, k.mask) & p323),
++        p401 ^ (not128_k(p412, k.mask) & p423),
++        p023 ^ (not128_k(p034, k.mask) & p040),
++        p123 ^ (not128_k(p134, k.mask) & p140),
++        p223 ^ (not128_k(p234, k.mask) & p240),
++        p323 ^ (not128_k(p334, k.mask) & p340),
++        p423 ^ (not128_k(p434, k.mask) & p440),
++        h01 ^ (not128_k(n01, k.mask) & m01),
++        h23 ^ (not128_k(n23, k.mask) & m23),
++        b24u ^ (not128_k(b20u, k.mask) & b21u),
++    ]
++}
++
++/// Keccak-f[1600] on the packed 13-word state (see [`keccak_round`]); the squeezer keeps
++/// its state packed between permutations.
++pub(crate) fn keccak_f1600_packed(mut st: [u128; 13]) -> [u128; 13] {
++    let k = round_consts();
++    // All 24 rounds straight-line; the round constants come from memory in one read.
++    let [rc0, rc1, rc2, rc3, rc4, rc5, rc6, rc7, rc8, rc9, rc10, rc11, rc12, rc13, rc14, rc15, rc16, rc17, rc18, rc19, rc20, rc21, rc22, rc23] = (*ROUND_CONSTANTS.span().multi_pop_front::<24>().unwrap()).unbox();
++    st = keccak_round(st, rc0, k);
++    st = keccak_round(st, rc1, k);
++    st = keccak_round(st, rc2, k);
++    st = keccak_round(st, rc3, k);
++    st = keccak_round(st, rc4, k);
++    st = keccak_round(st, rc5, k);
++    st = keccak_round(st, rc6, k);
++    st = keccak_round(st, rc7, k);
++    st = keccak_round(st, rc8, k);
++    st = keccak_round(st, rc9, k);
++    st = keccak_round(st, rc10, k);
++    st = keccak_round(st, rc11, k);
++    st = keccak_round(st, rc12, k);
++    st = keccak_round(st, rc13, k);
++    st = keccak_round(st, rc14, k);
++    st = keccak_round(st, rc15, k);
++    st = keccak_round(st, rc16, k);
++    st = keccak_round(st, rc17, k);
++    st = keccak_round(st, rc18, k);
++    st = keccak_round(st, rc19, k);
++    st = keccak_round(st, rc20, k);
++    st = keccak_round(st, rc21, k);
++    st = keccak_round(st, rc22, k);
++    st = keccak_round(st, rc23, k);
++    st
++}
++
++pub(crate) fn keccak_f1600(state: [u128; 25]) -> [u128; 25] {
++    let [s00, s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23, s24] = state;
++    let st: [u128; 13] = [
++        pack(s00, s01), pack(s05, s06), pack(s10, s11), pack(s15, s16), pack(s20, s21),
++        pack(s02, s03), pack(s07, s08), pack(s12, s13), pack(s17, s18), pack(s22, s23),
++        pack(s04, s09), pack(s14, s19), s24,
++    ];
++    let st = keccak_f1600_packed(st);
++    let [u0, u1, u2, u3, u4, v0, v1, v2, v3, v4, g01, g23, g4] = st;
++    let (o01, o00) = split(u0);
++    let (o06, o05) = split(u1);
++    let (o11, o10) = split(u2);
++    let (o16, o15) = split(u3);
++    let (o21, o20) = split(u4);
++    let (o03, o02) = split(v0);
++    let (o08, o07) = split(v1);
++    let (o13, o12) = split(v2);
++    let (o18, o17) = split(v3);
++    let (o23, o22) = split(v4);
++    let (o09, o04) = split(g01);
++    let (o19, o14) = split(g23);
++    [o00, o01, o02, o03, o04, o05, o06, o07, o08, o09, o10, o11, o12, o13, o14, o15, o16, o17, o18, o19, o20, o21, o22, o23, g4]
++}
+ /// SHAKE-256: absorb `input`, squeeze `out_bytes` bytes.
+ pub(crate) fn shake256(input: Array<u8>, out_bytes: u32) -> Array<u8> {
+     // Pad (pad10*1 with SHAKE domain 0x1F) to a multiple of the rate.
+@@ -329,3 +1210,4 @@ mod tests {
+         }
+     }
+ }
++
+diff --git a/crates/falcon_512/src/lib.cairo b/crates/falcon_512/src/lib.cairo
+index f1d50ec74b26828c590f61eb5f2cc33af05bd560..2b2fb4ff4a55427aab6a7b2f0e089397f7a6e341 100644
+--- a/crates/falcon_512/src/lib.cairo
++++ b/crates/falcon_512/src/lib.cairo
+@@ -95,25 +95,27 @@ pub impl Falcon512ShakeVerifier of PqSignatureVerifier {
+         if public_key.len() != PUBKEY_FELTS || signature.len() != SIG_FELTS {
+             return false;
+         }
+-        let h_ntt = match packing::unpack_512_u16(public_key) {
+-            Some(v) => v,
+-            None => { return false; },
+-        };
+-        let s1 = match packing::unpack_512_u16(signature.slice(0, 29)) {
++        let (s1, s1_norm) = match packing::unpack_512_u16_norm(signature.slice(0, 29)) {
+             Some(v) => v,
+             None => { return false; },
+         };
+         let salt_a = *signature.at(29);
+         let salt_b = *signature.at(30);
+-        let mul_hint = match packing::unpack_512_u16(signature.slice(31, 29)) {
++        let msg_point = match hash_to_point::hash_to_point_shake_512_raw(message_hash, salt_a, salt_b) {
+             Some(v) => v,
+             None => { return false; },
+         };
+-        let msg_point = match hash_to_point::hash_to_point_shake_512(message_hash, salt_a, salt_b) {
++        let (mul_hint, s2_norm) = match packing::unpack_512_u16_diff_norm(
++            signature.slice(31, 29), msg_point.span(),
++        ) {
+             Some(v) => v,
+             None => { return false; },
+         };
+-        falcon::verify_512_with_hint_u16(s1.span(), h_ntt.span(), mul_hint.span(), msg_point.span())
++        let norm: u64 = (s1_norm + s2_norm).try_into().unwrap();
++        if norm > falcon::SIG_BOUND_512 {
++            return false;
++        }
++        falcon::check_hint_zq(s1.span(), mul_hint.span(), public_key)
+     }
+ }
+ 
+diff --git a/crates/falcon_512/src/packing.cairo b/crates/falcon_512/src/packing.cairo
+index 150f1638be2734ee5f44433784aac448aa88c178..b9f8af41ac015313959905d2dc9eec4353065afc 100644
+--- a/crates/falcon_512/src/packing.cairo
++++ b/crates/falcon_512/src/packing.cairo
+@@ -10,8 +10,14 @@
+ //! in [0, Q)^512 — no coefficient can be smuggled in a non-canonical encoding.
+ 
+ use corelib_imports::bounded_int::{
+-    BoundedInt, DivRemHelper, UnitInt, bounded_int_div_rem, downcast, upcast,
++    AddHelper, BoundedInt, DivRemHelper, MulHelper, UnitInt, bounded_int, bounded_int_div_rem, downcast,
++    upcast,
+ };
++#[feature("bounded-int-utils")]
++use core::internal::bounded_int::{ConstrainHelper, SubHelper, constrain};
++use corelib_imports::integer::{U128sFromFelt252Result, u128s_from_felt252};
++use pqbench_ntt::LazyCoeff;
++use crate::falcon::{HintConsts, hint_quotient};
+ use crate::zq::Q;
+ 
+ /// Coefficients per full felt252 slot (two u128 halves of 9).
+@@ -23,7 +29,7 @@ const LAST_SLOT_VALS: u32 = 8;
+ 
+ const TWO_POW_128: felt252 = 0x100000000000000000000000000000000;
+ 
+-type PackingZq = BoundedInt<0, 12288>;
++pub(crate) type PackingZq = BoundedInt<0, 12288>;
+ type PackingQ = UnitInt<12289>;
+ type Acc1 = BoundedInt<0, 151019520>;
+ type Acc2 = BoundedInt<0, 1855878893568>;
+@@ -36,6 +42,13 @@ type Acc8 = BoundedInt<0, 6392178558614694273495691177456939008>;
+ 
+ const PACKING_Q_NZ: NonZero<PackingQ> = 12289;
+ 
++/// The divisor as a cell rather than an immediate: inside the unpacking loop it is a loop
++/// parameter, so each division uses it in place instead of first copying the constant.
++#[inline(never)]
++fn packing_q_cell() -> NonZero<PackingQ> {
++    PACKING_Q_NZ
++}
++
+ impl PackingDivRemAcc1Impl of DivRemHelper<Acc1, PackingQ> {
+     type DivT = PackingZq;
+     type RemT = PackingZq;
+@@ -99,48 +112,49 @@ pub(crate) fn unpack_512_u16(packed: Span<felt252>) -> Option<Array<u16>> {
+         return None;
+     }
+     let mut coeffs: Array<u16> = array![];
++    let q = packing_q_cell();
+     let mut full_slots = packed.slice(0, PACKED_SLOTS - 1);
+     while let Some(chunk) = full_slots.multi_pop_front::<7>() {
+         let [f0, f1, f2, f3, f4, f5, f6] = (*chunk).unbox();
+-        if !unpack_full_slot_u16(f0, ref coeffs)
+-            || !unpack_full_slot_u16(f1, ref coeffs)
+-            || !unpack_full_slot_u16(f2, ref coeffs)
+-            || !unpack_full_slot_u16(f3, ref coeffs)
+-            || !unpack_full_slot_u16(f4, ref coeffs)
+-            || !unpack_full_slot_u16(f5, ref coeffs)
+-            || !unpack_full_slot_u16(f6, ref coeffs) {
++        if !unpack_full_slot_u16(f0, ref coeffs, q)
++            || !unpack_full_slot_u16(f1, ref coeffs, q)
++            || !unpack_full_slot_u16(f2, ref coeffs, q)
++            || !unpack_full_slot_u16(f3, ref coeffs, q)
++            || !unpack_full_slot_u16(f4, ref coeffs, q)
++            || !unpack_full_slot_u16(f5, ref coeffs, q)
++            || !unpack_full_slot_u16(f6, ref coeffs, q) {
+             return None;
+         }
+     }
+     let last: u256 = (*packed.at(PACKED_SLOTS - 1)).into();
+-    if last.high != 0 || !unpack_half8_u16(last.low, ref coeffs) {
++    if last.high != 0 || !unpack_half8_u16(last.low, ref coeffs, q) {
+         return None;
+     }
+     Some(coeffs)
+ }
+ 
+ #[inline(always)]
+-fn unpack_full_slot_u16(felt: felt252, ref coeffs: Array<u16>) -> bool {
++fn unpack_full_slot_u16(felt: felt252, ref coeffs: Array<u16>, q: NonZero<PackingQ>) -> bool {
+     let value: u256 = felt.into();
+-    unpack_half9_u16(value.low, ref coeffs) && unpack_half9_u16(value.high, ref coeffs)
++    unpack_half9_u16(value.low, ref coeffs, q) && unpack_half9_u16(value.high, ref coeffs, q)
+ }
+ 
+ /// Extract nine base-Q digits from a u128 half. Values below Q^9 are canonical;
+ /// after eight divisions the remaining quotient is the ninth digit.
+ #[inline(always)]
+-fn unpack_half9_u16(value: u128, ref coeffs: Array<u16>) -> bool {
++fn unpack_half9_u16(value: u128, ref coeffs: Array<u16>, q: NonZero<PackingQ>) -> bool {
+     let value: Acc8 = match downcast(value) {
+         Some(v) => v,
+         None => { return false; },
+     };
+-    let (rest, d0) = bounded_int_div_rem(value, PACKING_Q_NZ);
+-    let (rest, d1) = bounded_int_div_rem(rest, PACKING_Q_NZ);
+-    let (rest, d2) = bounded_int_div_rem(rest, PACKING_Q_NZ);
+-    let (rest, d3) = bounded_int_div_rem(rest, PACKING_Q_NZ);
+-    let (rest, d4) = bounded_int_div_rem(rest, PACKING_Q_NZ);
+-    let (rest, d5) = bounded_int_div_rem(rest, PACKING_Q_NZ);
+-    let (rest, d6) = bounded_int_div_rem(rest, PACKING_Q_NZ);
+-    let (rest, d7) = bounded_int_div_rem(rest, PACKING_Q_NZ);
++    let (rest, d0) = bounded_int_div_rem(value, q);
++    let (rest, d1) = bounded_int_div_rem(rest, q);
++    let (rest, d2) = bounded_int_div_rem(rest, q);
++    let (rest, d3) = bounded_int_div_rem(rest, q);
++    let (rest, d4) = bounded_int_div_rem(rest, q);
++    let (rest, d5) = bounded_int_div_rem(rest, q);
++    let (rest, d6) = bounded_int_div_rem(rest, q);
++    let (rest, d7) = bounded_int_div_rem(rest, q);
+     coeffs.append(upcast(d0));
+     coeffs.append(upcast(d1));
+     coeffs.append(upcast(d2));
+@@ -155,18 +169,18 @@ fn unpack_half9_u16(value: u128, ref coeffs: Array<u16>) -> bool {
+ 
+ /// Extract the final slot's eight digits after checking the value is below Q^8.
+ #[inline(always)]
+-fn unpack_half8_u16(value: u128, ref coeffs: Array<u16>) -> bool {
++fn unpack_half8_u16(value: u128, ref coeffs: Array<u16>, q: NonZero<PackingQ>) -> bool {
+     let value: Acc7 = match downcast(value) {
+         Some(v) => v,
+         None => { return false; },
+     };
+-    let (rest, d0) = bounded_int_div_rem(value, PACKING_Q_NZ);
+-    let (rest, d1) = bounded_int_div_rem(rest, PACKING_Q_NZ);
+-    let (rest, d2) = bounded_int_div_rem(rest, PACKING_Q_NZ);
+-    let (rest, d3) = bounded_int_div_rem(rest, PACKING_Q_NZ);
+-    let (rest, d4) = bounded_int_div_rem(rest, PACKING_Q_NZ);
+-    let (rest, d5) = bounded_int_div_rem(rest, PACKING_Q_NZ);
+-    let (rest, d6) = bounded_int_div_rem(rest, PACKING_Q_NZ);
++    let (rest, d0) = bounded_int_div_rem(value, q);
++    let (rest, d1) = bounded_int_div_rem(rest, q);
++    let (rest, d2) = bounded_int_div_rem(rest, q);
++    let (rest, d3) = bounded_int_div_rem(rest, q);
++    let (rest, d4) = bounded_int_div_rem(rest, q);
++    let (rest, d5) = bounded_int_div_rem(rest, q);
++    let (rest, d6) = bounded_int_div_rem(rest, q);
+     coeffs.append(upcast(d0));
+     coeffs.append(upcast(d1));
+     coeffs.append(upcast(d2));
+@@ -307,3 +321,542 @@ mod tests {
+         assert!(unpack_512(tampered2.span()).is_none());
+     }
+ }
++
++/// Unpack the canonical 29-slot encoding directly into the verifier's `u16` form.
++/// Returns `None` on wrong length or any non-canonical slot encoding.
++/// [`unpack_512_u16`] keeping the digits as bounded integers below q.
++pub(crate) fn unpack_512_zq(packed: Span<felt252>) -> Option<Array<PackingZq>> {
++    if packed.len() != PACKED_SLOTS {
++        return None;
++    }
++    let mut coeffs: Array<PackingZq> = array![];
++    let q = packing_q_cell();
++    let mut full_slots = packed.slice(0, PACKED_SLOTS - 1);
++    while let Some(chunk) = full_slots.multi_pop_front::<7>() {
++        let [f0, f1, f2, f3, f4, f5, f6] = (*chunk).unbox();
++        if !unpack_full_slot_zq(f0, ref coeffs, q)
++            || !unpack_full_slot_zq(f1, ref coeffs, q)
++            || !unpack_full_slot_zq(f2, ref coeffs, q)
++            || !unpack_full_slot_zq(f3, ref coeffs, q)
++            || !unpack_full_slot_zq(f4, ref coeffs, q)
++            || !unpack_full_slot_zq(f5, ref coeffs, q)
++            || !unpack_full_slot_zq(f6, ref coeffs, q) {
++            return None;
++        }
++    }
++    let last: u256 = (*packed.at(PACKED_SLOTS - 1)).into();
++    if last.high != 0 || !unpack_half8_zq(last.low, ref coeffs, q) {
++        return None;
++    }
++    Some(coeffs)
++}
++
++#[inline(always)]
++fn unpack_full_slot_zq(felt: felt252, ref coeffs: Array<PackingZq>, q: NonZero<PackingQ>) -> bool {
++    let value: u256 = felt.into();
++    unpack_half9_zq(value.low, ref coeffs, q) && unpack_half9_zq(value.high, ref coeffs, q)
++}
++
++/// Extract nine base-Q digits from a u128 half. Values below Q^9 are canonical;
++/// after eight divisions the remaining quotient is the ninth digit.
++#[inline(always)]
++fn unpack_half9_zq(value: u128, ref coeffs: Array<PackingZq>, q: NonZero<PackingQ>) -> bool {
++    let value: Acc8 = match downcast(value) {
++        Some(v) => v,
++        None => { return false; },
++    };
++    let (rest, d0) = bounded_int_div_rem(value, q);
++    let (rest, d1) = bounded_int_div_rem(rest, q);
++    let (rest, d2) = bounded_int_div_rem(rest, q);
++    let (rest, d3) = bounded_int_div_rem(rest, q);
++    let (rest, d4) = bounded_int_div_rem(rest, q);
++    let (rest, d5) = bounded_int_div_rem(rest, q);
++    let (rest, d6) = bounded_int_div_rem(rest, q);
++    let (rest, d7) = bounded_int_div_rem(rest, q);
++    coeffs.append(d0);
++    coeffs.append(d1);
++    coeffs.append(d2);
++    coeffs.append(d3);
++    coeffs.append(d4);
++    coeffs.append(d5);
++    coeffs.append(d6);
++    coeffs.append(d7);
++    coeffs.append(rest);
++    true
++}
++
++/// Extract the final slot's eight digits after checking the value is below Q^8.
++#[inline(always)]
++fn unpack_half8_zq(value: u128, ref coeffs: Array<PackingZq>, q: NonZero<PackingQ>) -> bool {
++    let value: Acc7 = match downcast(value) {
++        Some(v) => v,
++        None => { return false; },
++    };
++    let (rest, d0) = bounded_int_div_rem(value, q);
++    let (rest, d1) = bounded_int_div_rem(rest, q);
++    let (rest, d2) = bounded_int_div_rem(rest, q);
++    let (rest, d3) = bounded_int_div_rem(rest, q);
++    let (rest, d4) = bounded_int_div_rem(rest, q);
++    let (rest, d5) = bounded_int_div_rem(rest, q);
++    let (rest, d6) = bounded_int_div_rem(rest, q);
++    coeffs.append(d0);
++    coeffs.append(d1);
++    coeffs.append(d2);
++    coeffs.append(d3);
++    coeffs.append(d4);
++    coeffs.append(d5);
++    coeffs.append(d6);
++    coeffs.append(rest);
++    true
++}
++
++type CenterShiftZq = BoundedInt<6144, 18432>;
++type CenteredZq = BoundedInt<-6144, 6144>;
++impl AddZqHalf of AddHelper<PackingZq, UnitInt<6144>> {
++    type Result = CenterShiftZq;
++}
++impl DivRemCenterShiftZq of DivRemHelper<CenterShiftZq, PackingQ> {
++    type DivT = BoundedInt<0, 1>;
++    type RemT = PackingZq;
++}
++impl SubZqHalf of SubHelper<PackingZq, UnitInt<6144>> {
++    type Result = CenteredZq;
++}
++impl MulCenteredZq of MulHelper<CenteredZq, CenteredZq> {
++    type Result = BoundedInt<-37748736, 37748736>;
++}
++
++/// The centered square of a digit: `(d + 6144) mod q - 6144` lies in [-6144, 6144] and is
++/// congruent to `d`.
++impl ConstrainZqHalf of ConstrainHelper<PackingZq, 6145> {
++    type LowT = BoundedInt<0, 6144>;
++    type HighT = BoundedInt<6145, 12288>;
++}
++
++#[inline(always)]
++fn center_sq_zq(d: PackingZq, q: NonZero<PackingQ>) -> felt252 {
++    // One range check: d <= 6144 is its own centered value, otherwise d - q is.
++    match constrain::<PackingZq, 6145>(d) {
++        Ok(low) => {
++            let x: felt252 = low.into();
++            x * x
++        },
++        Err(high) => {
++            let x: felt252 = high.into() - 12289;
++            x * x
++        },
++    }
++}
++
++/// Unpack the canonical 29-slot encoding directly into the verifier's `u16` form.
++/// Returns `None` on wrong length or any non-canonical slot encoding.
++/// [`unpack_512_u16`] that also returns the sum of the coefficients' centered squares.
++pub(crate) fn unpack_512_u16_norm(packed: Span<felt252>) -> Option<(Array<u16>, felt252)> {
++    if packed.len() != PACKED_SLOTS {
++        return None;
++    }
++    let mut coeffs: Array<u16> = array![];
++    let mut norm: felt252 = 0;
++    let q = packing_q_cell();
++    let mut full_slots = packed.slice(0, PACKED_SLOTS - 1);
++    while let Some(chunk) = full_slots.multi_pop_front::<7>() {
++        let [f0, f1, f2, f3, f4, f5, f6] = (*chunk).unbox();
++        if !unpack_full_slot_u16n(f0, ref coeffs, ref norm, q)
++            || !unpack_full_slot_u16n(f1, ref coeffs, ref norm, q)
++            || !unpack_full_slot_u16n(f2, ref coeffs, ref norm, q)
++            || !unpack_full_slot_u16n(f3, ref coeffs, ref norm, q)
++            || !unpack_full_slot_u16n(f4, ref coeffs, ref norm, q)
++            || !unpack_full_slot_u16n(f5, ref coeffs, ref norm, q)
++            || !unpack_full_slot_u16n(f6, ref coeffs, ref norm, q) {
++            return None;
++        }
++    }
++    let last: u256 = (*packed.at(PACKED_SLOTS - 1)).into();
++    if last.high != 0 || !unpack_half8_u16n(last.low, ref coeffs, ref norm, q) {
++        return None;
++    }
++    Some((coeffs, norm))
++}
++
++#[inline(always)]
++fn unpack_full_slot_u16n(
++    felt: felt252, ref coeffs: Array<u16>, ref norm: felt252, q: NonZero<PackingQ>,
++) -> bool {
++    let value: u256 = felt.into();
++    unpack_half9_u16n(value.low, ref coeffs, ref norm, q)
++        && unpack_half9_u16n(value.high, ref coeffs, ref norm, q)
++}
++
++/// Extract nine base-Q digits from a u128 half. Values below Q^9 are canonical;
++/// after eight divisions the remaining quotient is the ninth digit.
++#[inline(always)]
++fn unpack_half9_u16n(
++    value: u128, ref coeffs: Array<u16>, ref norm: felt252, q: NonZero<PackingQ>,
++) -> bool {
++    let value: Acc8 = match downcast(value) {
++        Some(v) => v,
++        None => { return false; },
++    };
++    let (rest, d0) = bounded_int_div_rem(value, q);
++    let (rest, d1) = bounded_int_div_rem(rest, q);
++    let (rest, d2) = bounded_int_div_rem(rest, q);
++    let (rest, d3) = bounded_int_div_rem(rest, q);
++    let (rest, d4) = bounded_int_div_rem(rest, q);
++    let (rest, d5) = bounded_int_div_rem(rest, q);
++    let (rest, d6) = bounded_int_div_rem(rest, q);
++    let (rest, d7) = bounded_int_div_rem(rest, q);
++    coeffs.append(upcast(d0));
++    norm += center_sq_zq(d0, q);
++    coeffs.append(upcast(d1));
++    norm += center_sq_zq(d1, q);
++    coeffs.append(upcast(d2));
++    norm += center_sq_zq(d2, q);
++    coeffs.append(upcast(d3));
++    norm += center_sq_zq(d3, q);
++    coeffs.append(upcast(d4));
++    norm += center_sq_zq(d4, q);
++    coeffs.append(upcast(d5));
++    norm += center_sq_zq(d5, q);
++    coeffs.append(upcast(d6));
++    norm += center_sq_zq(d6, q);
++    coeffs.append(upcast(d7));
++    norm += center_sq_zq(d7, q);
++    coeffs.append(upcast(rest));
++    norm += center_sq_zq(rest, q);
++    true
++}
++
++/// Extract the final slot's eight digits after checking the value is below Q^8.
++#[inline(always)]
++fn unpack_half8_u16n(
++    value: u128, ref coeffs: Array<u16>, ref norm: felt252, q: NonZero<PackingQ>,
++) -> bool {
++    let value: Acc7 = match downcast(value) {
++        Some(v) => v,
++        None => { return false; },
++    };
++    let (rest, d0) = bounded_int_div_rem(value, q);
++    let (rest, d1) = bounded_int_div_rem(rest, q);
++    let (rest, d2) = bounded_int_div_rem(rest, q);
++    let (rest, d3) = bounded_int_div_rem(rest, q);
++    let (rest, d4) = bounded_int_div_rem(rest, q);
++    let (rest, d5) = bounded_int_div_rem(rest, q);
++    let (rest, d6) = bounded_int_div_rem(rest, q);
++    coeffs.append(upcast(d0));
++    norm += center_sq_zq(d0, q);
++    coeffs.append(upcast(d1));
++    norm += center_sq_zq(d1, q);
++    coeffs.append(upcast(d2));
++    norm += center_sq_zq(d2, q);
++    coeffs.append(upcast(d3));
++    norm += center_sq_zq(d3, q);
++    coeffs.append(upcast(d4));
++    norm += center_sq_zq(d4, q);
++    coeffs.append(upcast(d5));
++    norm += center_sq_zq(d5, q);
++    coeffs.append(upcast(d6));
++    norm += center_sq_zq(d6, q);
++    coeffs.append(upcast(rest));
++    norm += center_sq_zq(rest, q);
++    true
++}
++
++type DiffShiftZq = BoundedInt<6145, 83968>;
++impl AddU16DiffOffset of AddHelper<u16, UnitInt<18433>> {
++    type Result = BoundedInt<18433, 83968>;
++}
++impl SubDiffZq of SubHelper<BoundedInt<18433, 83968>, PackingZq> {
++    type Result = DiffShiftZq;
++}
++impl DivRemDiffShiftZq of DivRemHelper<DiffShiftZq, PackingQ> {
++    type DivT = BoundedInt<0, 6>;
++    type RemT = PackingZq;
++}
++
++/// The centered square of `m - t` mod q: `(m + 6144 + q - t) mod q - 6144` lies in
++/// [-6144, 6144] and is congruent to `m - t`.
++#[inline(always)]
++fn center_diff_sq_zq(m: u16, t: PackingZq, q: NonZero<PackingQ>) -> felt252 {
++    let offset: UnitInt<18433> = 18433;
++    let half: UnitInt<6144> = 6144;
++    let (_, r) = bounded_int_div_rem(bounded_int::sub(bounded_int::add(m, offset), t), q);
++    let c = bounded_int::sub(r, half);
++    bounded_int::mul(c, c).into()
++}
++
++/// Unpack the canonical 29-slot encoding directly into the verifier's `u16` form.
++/// Returns `None` on wrong length or any non-canonical slot encoding.
++/// [`unpack_512_u16`] for the mul hint `t`, also returning the sum over i of the centered
++/// squares of `msg[i] - t[i]` (the s2 part of the norm).
++pub(crate) fn unpack_512_u16_diff_norm(
++    packed: Span<felt252>, mut msg: Span<u16>,
++) -> Option<(Array<u16>, felt252)> {
++    if packed.len() != PACKED_SLOTS {
++        return None;
++    }
++    let mut coeffs: Array<u16> = array![];
++    let mut norm: felt252 = 0;
++    let q = packing_q_cell();
++    let mut full_slots = packed.slice(0, PACKED_SLOTS - 1);
++    while let Some(chunk) = full_slots.multi_pop_front::<7>() {
++        let [f0, f1, f2, f3, f4, f5, f6] = (*chunk).unbox();
++        if !unpack_full_slot_u16d(f0, ref coeffs, ref msg, ref norm, q)
++            || !unpack_full_slot_u16d(f1, ref coeffs, ref msg, ref norm, q)
++            || !unpack_full_slot_u16d(f2, ref coeffs, ref msg, ref norm, q)
++            || !unpack_full_slot_u16d(f3, ref coeffs, ref msg, ref norm, q)
++            || !unpack_full_slot_u16d(f4, ref coeffs, ref msg, ref norm, q)
++            || !unpack_full_slot_u16d(f5, ref coeffs, ref msg, ref norm, q)
++            || !unpack_full_slot_u16d(f6, ref coeffs, ref msg, ref norm, q) {
++            return None;
++        }
++    }
++    let last: u256 = (*packed.at(PACKED_SLOTS - 1)).into();
++    if last.high != 0 || !unpack_half8_u16d(last.low, ref coeffs, ref msg, ref norm, q) {
++        return None;
++    }
++    Some((coeffs, norm))
++}
++
++#[inline(always)]
++fn unpack_full_slot_u16d(
++    felt: felt252,
++    ref coeffs: Array<u16>,
++    ref msg: Span<u16>,
++    ref norm: felt252,
++    q: NonZero<PackingQ>,
++) -> bool {
++    let value: u256 = felt.into();
++    unpack_half9_u16d(value.low, ref coeffs, ref msg, ref norm, q)
++        && unpack_half9_u16d(value.high, ref coeffs, ref msg, ref norm, q)
++}
++
++/// Extract nine base-Q digits from a u128 half. Values below Q^9 are canonical;
++/// after eight divisions the remaining quotient is the ninth digit.
++#[inline(always)]
++fn unpack_half9_u16d(
++    value: u128,
++    ref coeffs: Array<u16>,
++    ref msg: Span<u16>,
++    ref norm: felt252,
++    q: NonZero<PackingQ>,
++) -> bool {
++    let value: Acc8 = match downcast(value) {
++        Some(v) => v,
++        None => { return false; },
++    };
++    let (rest, d0) = bounded_int_div_rem(value, q);
++    let (rest, d1) = bounded_int_div_rem(rest, q);
++    let (rest, d2) = bounded_int_div_rem(rest, q);
++    let (rest, d3) = bounded_int_div_rem(rest, q);
++    let (rest, d4) = bounded_int_div_rem(rest, q);
++    let (rest, d5) = bounded_int_div_rem(rest, q);
++    let (rest, d6) = bounded_int_div_rem(rest, q);
++    let (rest, d7) = bounded_int_div_rem(rest, q);
++    let [m0, m1, m2, m3, m4, m5, m6, m7, m8] = (*msg.multi_pop_front::<9>().unwrap()).unbox();
++    coeffs.append(upcast(d0));
++    norm += center_diff_sq_zq(m0, d0, q);
++    coeffs.append(upcast(d1));
++    norm += center_diff_sq_zq(m1, d1, q);
++    coeffs.append(upcast(d2));
++    norm += center_diff_sq_zq(m2, d2, q);
++    coeffs.append(upcast(d3));
++    norm += center_diff_sq_zq(m3, d3, q);
++    coeffs.append(upcast(d4));
++    norm += center_diff_sq_zq(m4, d4, q);
++    coeffs.append(upcast(d5));
++    norm += center_diff_sq_zq(m5, d5, q);
++    coeffs.append(upcast(d6));
++    norm += center_diff_sq_zq(m6, d6, q);
++    coeffs.append(upcast(d7));
++    norm += center_diff_sq_zq(m7, d7, q);
++    coeffs.append(upcast(rest));
++    norm += center_diff_sq_zq(m8, rest, q);
++    true
++}
++
++/// Extract the final slot's eight digits after checking the value is below Q^8.
++#[inline(always)]
++fn unpack_half8_u16d(
++    value: u128,
++    ref coeffs: Array<u16>,
++    ref msg: Span<u16>,
++    ref norm: felt252,
++    q: NonZero<PackingQ>,
++) -> bool {
++    let value: Acc7 = match downcast(value) {
++        Some(v) => v,
++        None => { return false; },
++    };
++    let (rest, d0) = bounded_int_div_rem(value, q);
++    let (rest, d1) = bounded_int_div_rem(rest, q);
++    let (rest, d2) = bounded_int_div_rem(rest, q);
++    let (rest, d3) = bounded_int_div_rem(rest, q);
++    let (rest, d4) = bounded_int_div_rem(rest, q);
++    let (rest, d5) = bounded_int_div_rem(rest, q);
++    let (rest, d6) = bounded_int_div_rem(rest, q);
++    let [m0, m1, m2, m3, m4, m5, m6, m7] = (*msg.multi_pop_front::<8>().unwrap()).unbox();
++    coeffs.append(upcast(d0));
++    norm += center_diff_sq_zq(m0, d0, q);
++    coeffs.append(upcast(d1));
++    norm += center_diff_sq_zq(m1, d1, q);
++    coeffs.append(upcast(d2));
++    norm += center_diff_sq_zq(m2, d2, q);
++    coeffs.append(upcast(d3));
++    norm += center_diff_sq_zq(m3, d3, q);
++    coeffs.append(upcast(d4));
++    norm += center_diff_sq_zq(m4, d4, q);
++    coeffs.append(upcast(d5));
++    norm += center_diff_sq_zq(m5, d5, q);
++    coeffs.append(upcast(d6));
++    norm += center_diff_sq_zq(m6, d6, q);
++    coeffs.append(upcast(rest));
++    norm += center_diff_sq_zq(m7, rest, q);
++    true
++}
++
++/// Unpack the canonical 29-slot encoding directly into the verifier's `u16` form.
++/// Returns `None` on wrong length or any non-canonical slot encoding.
++/// Unpack the public key's coefficients (bounded below q) and check each against the two
++/// unreduced transforms as it comes out (see `falcon::check_hint_zq`).
++pub(crate) fn unpack_512_zq_check(
++    packed: Span<felt252>, mut s1n: Span<LazyCoeff>, mut hn: Span<LazyCoeff>, k: HintConsts,
++) -> bool {
++    if packed.len() != PACKED_SLOTS {
++        return false;
++    }
++    let q = packing_q_cell();
++    let mut full_slots = packed.slice(0, PACKED_SLOTS - 1);
++    while let Some(chunk) = full_slots.multi_pop_front::<7>() {
++        let [f0, f1, f2, f3, f4, f5, f6] = (*chunk).unbox();
++        if !unpack_full_slot_zqc(f0, ref s1n, ref hn, k, q)
++            || !unpack_full_slot_zqc(f1, ref s1n, ref hn, k, q)
++            || !unpack_full_slot_zqc(f2, ref s1n, ref hn, k, q)
++            || !unpack_full_slot_zqc(f3, ref s1n, ref hn, k, q)
++            || !unpack_full_slot_zqc(f4, ref s1n, ref hn, k, q)
++            || !unpack_full_slot_zqc(f5, ref s1n, ref hn, k, q)
++            || !unpack_full_slot_zqc(f6, ref s1n, ref hn, k, q) {
++            return false;
++        }
++    }
++    let last: u256 = (*packed.at(PACKED_SLOTS - 1)).into();
++    if last.high != 0 || !unpack_half8_zqc(last.low, ref s1n, ref hn, k, q) {
++        return false;
++    }
++    true
++}
++
++#[inline(always)]
++fn unpack_full_slot_zqc(
++    felt: felt252,
++    ref s1n: Span<LazyCoeff>,
++    ref hn: Span<LazyCoeff>,
++    k: HintConsts,
++    q: NonZero<PackingQ>,
++) -> bool {
++    let value: u256 = felt.into();
++    unpack_half9_zqc(value.low, ref s1n, ref hn, k, q)
++        && unpack_half9_zqc(value.high, ref s1n, ref hn, k, q)
++}
++
++/// Extract nine base-Q digits from a u128 half. Values below Q^9 are canonical;
++/// after eight divisions the remaining quotient is the ninth digit.
++#[inline(always)]
++fn unpack_half9_zqc(
++    value: u128,
++    ref s1n: Span<LazyCoeff>,
++    ref hn: Span<LazyCoeff>,
++    k: HintConsts,
++    q: NonZero<PackingQ>,
++) -> bool {
++    let value: Acc8 = match downcast(value) {
++        Some(v) => v,
++        None => { return false; },
++    };
++    let (rest, d0) = bounded_int_div_rem(value, q);
++    let (rest, d1) = bounded_int_div_rem(rest, q);
++    let (rest, d2) = bounded_int_div_rem(rest, q);
++    let (rest, d3) = bounded_int_div_rem(rest, q);
++    let (rest, d4) = bounded_int_div_rem(rest, q);
++    let (rest, d5) = bounded_int_div_rem(rest, q);
++    let (rest, d6) = bounded_int_div_rem(rest, q);
++    let (rest, d7) = bounded_int_div_rem(rest, q);
++    let [a0, a1, a2, a3, a4, a5, a6, a7, a8] = (*s1n.multi_pop_front::<9>().unwrap()).unbox();
++    let [c0, c1, c2, c3, c4, c5, c6, c7, c8] = (*hn.multi_pop_front::<9>().unwrap()).unbox();
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a0, d0, c0, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a1, d1, c1, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a2, d2, c2, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a3, d3, c3, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a4, d4, c4, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a5, d5, c5, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a6, d6, c6, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a7, d7, c7, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a8, rest, c8, k)) {
++        return false;
++    }
++    true
++}
++
++/// Extract the final slot's eight digits after checking the value is below Q^8.
++#[inline(always)]
++fn unpack_half8_zqc(
++    value: u128,
++    ref s1n: Span<LazyCoeff>,
++    ref hn: Span<LazyCoeff>,
++    k: HintConsts,
++    q: NonZero<PackingQ>,
++) -> bool {
++    let value: Acc7 = match downcast(value) {
++        Some(v) => v,
++        None => { return false; },
++    };
++    let (rest, d0) = bounded_int_div_rem(value, q);
++    let (rest, d1) = bounded_int_div_rem(rest, q);
++    let (rest, d2) = bounded_int_div_rem(rest, q);
++    let (rest, d3) = bounded_int_div_rem(rest, q);
++    let (rest, d4) = bounded_int_div_rem(rest, q);
++    let (rest, d5) = bounded_int_div_rem(rest, q);
++    let (rest, d6) = bounded_int_div_rem(rest, q);
++    let [a0, a1, a2, a3, a4, a5, a6, a7] = (*s1n.multi_pop_front::<8>().unwrap()).unbox();
++    let [c0, c1, c2, c3, c4, c5, c6, c7] = (*hn.multi_pop_front::<8>().unwrap()).unbox();
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a0, d0, c0, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a1, d1, c1, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a2, d2, c2, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a3, d3, c3, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a4, d4, c4, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a5, d5, c5, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a6, d6, c6, k)) {
++        return false;
++    }
++    if let U128sFromFelt252Result::Wide(_) = u128s_from_felt252(hint_quotient(a7, rest, c7, k)) {
++        return false;
++    }
++    true
++}
+diff --git a/crates/ntt/src/falcon512_fast.cairo b/crates/ntt/src/falcon512_fast.cairo
+index 08c9df43a717f2e7c60d9600a77824ac0f3e3640..b43464be4e6f498818b2d96cc425adfea73d9861 100644
+--- a/crates/ntt/src/falcon512_fast.cairo
++++ b/crates/ntt/src/falcon512_fast.cairo
+@@ -10,28 +10,93 @@
+ //! rely on callers to enforce that precondition; the fixed operation graph computes
+ //! the Falcon evaluation order and returns 512 reduced coefficients.
+ 
+-use corelib_imports::bounded_int::{BoundedInt, DivRemHelper, UnitInt, bounded_int_div_rem, upcast};
++use corelib_imports::bounded_int::{
++    BoundedInt, DivRemHelper, UnitInt, bounded_int_div_rem as reduce_div_rem, upcast as bounded_upcast,
++};
+ use corelib_imports::integer::{U128sFromFelt252Result, u128s_from_felt252};
+ 
+-type Falcon512Zq = BoundedInt<0, 12288>;
++/// An unreduced transform output: the shifted value the generated graph computes, in
++/// `[0, 2^122)` (the generator's exact bound) and congruent mod q to the reduced output.
++#[derive(Copy, Drop)]
++pub struct LazyCoeff {
++    pub value: felt252,
++}
++
++/// The generated graph below converts each shifted output with `felt252_as_u128`,
++/// types it as `U128AsBounded` and reduces it with `bounded_int_div_rem` into a
++/// `Falcon512Zq`. Here those names are local and keep the output as a `LazyCoeff`;
++/// `upcast` reduces it when an entry point asks for `u16` or `felt252`.
++type Falcon512Zq = LazyCoeff;
++type U128AsBounded = LazyCoeff;
++type Falcon512Residue = BoundedInt<0, 12288>;
+ type Falcon512Q = UnitInt<12289>;
+-type U128AsBounded = BoundedInt<0, 340282366920938463463374607431768211455>;
++type ShiftedU128 = BoundedInt<0, 340282366920938463463374607431768211455>;
++
++#[inline(always)]
++fn bounded_int_div_rem(value: LazyCoeff, _modulus: NonZero<Falcon512Q>) -> ((), LazyCoeff) {
++    ((), value)
++}
++
++/// Conversions used by the generated code and its entry points.
++pub trait NttOutput<F, T> {
++    fn convert(value: F) -> T;
++}
++
++impl NttOutputShifted of NttOutput<felt252, LazyCoeff> {
++    #[inline(always)]
++    fn convert(value: felt252) -> LazyCoeff {
++        LazyCoeff { value }
++    }
++}
++
++impl NttOutputLazy of NttOutput<LazyCoeff, LazyCoeff> {
++    #[inline(always)]
++    fn convert(value: LazyCoeff) -> LazyCoeff {
++        value
++    }
++}
++
++#[inline(always)]
++fn reduce_lazy(value: LazyCoeff) -> Falcon512Residue {
++    // Exact generated bounds put canonical shifted outputs below 2^128.
++    let wide: ShiftedU128 = match u128s_from_felt252(value.value) {
++        U128sFromFelt252Result::Narrow(low) => bounded_upcast(low),
++        U128sFromFelt252Result::Wide((_, low)) => bounded_upcast(low),
++    };
++    let (_, r) = reduce_div_rem(wide, FALCON512_Q_NZ);
++    r
++}
++
++impl NttOutputU16 of NttOutput<LazyCoeff, u16> {
++    #[inline(always)]
++    fn convert(value: LazyCoeff) -> u16 {
++        bounded_upcast(reduce_lazy(value))
++    }
++}
++
++impl NttOutputFelt of NttOutput<LazyCoeff, felt252> {
++    #[inline(always)]
++    fn convert(value: LazyCoeff) -> felt252 {
++        bounded_upcast(reduce_lazy(value))
++    }
++}
++
++fn upcast<F, T, impl C: NttOutput<F, T>>(value: F) -> T {
++    C::convert(value)
++}
+ 
+ const FALCON512_Q_NZ: NonZero<Falcon512Q> = 12289;
+ const SHIFT: felt252 = 2305326338167692580222332728864932068;
+ 
+-impl Falcon512FastDivRemImpl of DivRemHelper<U128AsBounded, Falcon512Q> {
++impl Falcon512FastDivRemImpl of DivRemHelper<ShiftedU128, Falcon512Q> {
+     type DivT = BoundedInt<0, 27689996494502275487295516920153650>;
+-    type RemT = Falcon512Zq;
++    type RemT = Falcon512Residue;
+ }
+ 
+ #[inline(always)]
+-fn felt252_as_u128(value: felt252) -> u128 {
+-    // Exact generated bounds put canonical shifted outputs below 2^128.
+-    match u128s_from_felt252(value) {
+-        U128sFromFelt252Result::Narrow(low) => low,
+-        U128sFromFelt252Result::Wide((_, low)) => low,
+-    }
++fn felt252_as_u128(value: felt252) -> felt252 {
++    // The shifted output stays a felt252 here; `reduce_lazy` converts it when reducing.
++    value
+ }
+ 
+ #[inline(always)]
+@@ -11158,9 +11223,11 @@ pub fn ntt_falcon512_fast_unchecked(mut f: Span<felt252>) -> Array<felt252> {
+ /// validating each coefficient.
+ ///
+ /// Inputs must be in `[0, 12289)`; violating that precondition may return an
+-/// invalid transform. Outputs are in the Falcon/falcon.py evaluation order and
+-/// reduced to the same range.
+-pub fn ntt_falcon512_fast_u16_unchecked(mut f: Span<u16>) -> Array<u16> {
++/// invalid transform. Outputs are in the Falcon/falcon.py evaluation order, converted
++/// by `NttOutput`: reduced to the same range for `u16`, unreduced for `LazyCoeff`.
++pub fn ntt_falcon512_fast_u16_into<T, impl C: NttOutput<LazyCoeff, T>, +Drop<T>>(
++    mut f: Span<u16>,
++) -> Array<T> {
+     assert(f.len() == 512, 'fast NTT: bad length');
+     let boxed = f.multi_pop_front::<512>().unwrap();
+     let [
+@@ -12793,3 +12860,13 @@ pub fn ntt_falcon512_fast_u16_unchecked(mut f: Span<u16>) -> Array<u16> {
+         upcast(r506), upcast(r507), upcast(r508), upcast(r509), upcast(r510), upcast(r511),
+     ]
+ }
++
++/// Compute the Falcon-512 forward NTT from canonical `u16` coefficients, reduced.
++pub fn ntt_falcon512_fast_u16_unchecked(f: Span<u16>) -> Array<u16> {
++    ntt_falcon512_fast_u16_into(f)
++}
++
++/// The same transform with its outputs left unreduced (see `LazyCoeff`).
++pub fn ntt_falcon512_fast_u16_lazy_unchecked(f: Span<u16>) -> Array<LazyCoeff> {
++    ntt_falcon512_fast_u16_into(f)
++}
+diff --git a/crates/ntt/src/lib.cairo b/crates/ntt/src/lib.cairo
+index ce4d1b41abe7871d7c369914cfdf7692a0789e15..86af0febd5acee07f5fa132e30225d45fa97b87a 100644
+--- a/crates/ntt/src/lib.cairo
++++ b/crates/ntt/src/lib.cairo
+@@ -25,4 +25,7 @@ pub mod roots_felt;
+ pub mod roots_scaled;
+ 
+ pub use engine::{NttConfig, intt, ntt, ntt_lazy, reduce_felt};
+-pub use falcon512_fast::{ntt_falcon512_fast_u16_unchecked, ntt_falcon512_fast_unchecked};
++pub use falcon512_fast::{
++    LazyCoeff, ntt_falcon512_fast_u16_lazy_unchecked, ntt_falcon512_fast_u16_unchecked,
++    ntt_falcon512_fast_unchecked,
++};
