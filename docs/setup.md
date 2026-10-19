@@ -1,6 +1,6 @@
 # Setup
 
-`make setup` (= `scripts/setup.sh`) builds six trees into `build/`:
+`make setup` (= `scripts/setup.sh`) builds the four Stwo trees and checks out and patches the two Falcon trees in `build/` (Starknet Foundry compiles those on their first race):
 
 | Tree | Source | Patch |
 |---|---|---|

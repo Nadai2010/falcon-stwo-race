@@ -22,7 +22,7 @@ GET /api/race?mode=… (SSE) ────▶   one race at a time (lock) ──�
 
 ## Process handling
 - Each side runs in its own session (`setsid`), so Stop or a closed page kills the whole process group.
-- Side-by-side mode pins each side to one half of the CPUs (`sched_setaffinity`) with `RAYON_NUM_THREADS` set to that half; sequential mode gives each side the whole machine, one after the other.
+- Side-by-side mode pins each side to one half of the CPUs (`sched_setaffinity`) with `RAYON_NUM_THREADS` set to that half; sequential mode gives each side the whole machine (`RAYON_NUM_THREADS` = all usable CPUs), one after the other. The Falcon lane always runs both snforge tests side by side: gas is deterministic.
 - Commands and paths come only from `races.json` and `config.local.json`; the request only picks lanes and mode.
 - Proofs and preimages go to a temporary directory per race.
 

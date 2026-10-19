@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import signal
 import sys
 import threading
 from http import HTTPStatus
@@ -47,8 +48,25 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _local(self) -> bool:
+        """Only this machine's own page may use the API: the Host must be loopback (no DNS rebinding) and a
+        browser request must come from the same origin (no other site can start a race)."""
+        port = self.server.server_address[1]
+        if self.headers.get("Host") not in (f"127.0.0.1:{port}", f"localhost:{port}"):
+            return False
+        origin = self.headers.get("Origin")
+        if origin and origin not in (f"http://127.0.0.1:{port}", f"http://localhost:{port}"):
+            return False
+        return self.headers.get("Sec-Fetch-Site", "same-origin") in ("same-origin", "none")
+
     def do_GET(self) -> None:
         url = urlparse(self.path)
+        if url.path.startswith("/api/") and not self._local():
+            self._json({"error": "local page only"}, HTTPStatus.FORBIDDEN)
+            return
+        if url.path == "/api/status":
+            self._json({"busy": BUSY.locked()})
+            return
         if url.path == "/api/config":
             cfg = race.load_config()
             self._json({"lanes": [{k: v for k, v in lane.items() if k not in ("original", "record")}
@@ -69,7 +87,7 @@ class Handler(BaseHTTPRequestHandler):
         if mode not in ("parallel", "sequential") or not lanes:
             self._json({"error": "bad request"}, HTTPStatus.BAD_REQUEST)
             return
-        if not BUSY.acquire(blocking=False):
+        if not BUSY.acquire(timeout=10):  # a stopped race may still be killing its provers
             self._json({"error": "a race is already running"}, HTTPStatus.CONFLICT)
             return
         try:
@@ -93,6 +111,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main() -> None:
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
+    signal.signal(signal.SIGTERM, lambda *_: (race.kill_all(), sys.exit(0)))
     srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     srv.daemon_threads = True
     print(f"falcon-stwo-race on http://127.0.0.1:{port}", flush=True)
@@ -100,6 +119,8 @@ def main() -> None:
         srv.serve_forever()
     except KeyboardInterrupt:
         pass
+    finally:
+        race.kill_all()
 
 
 if __name__ == "__main__":

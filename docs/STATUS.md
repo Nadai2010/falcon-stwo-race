@@ -25,10 +25,12 @@ Rule: when an item is DONE it leaves this table and is appended to `docs/STATUS-
 | 2 | Public source for the evaluator's proof-worker entry points | 🔴 | `privacy_prove_stdout.rs`, `privacy_verify.rs` and season 1's default `pvfast_workload.rs` are not in the public fork; `make setup` needs `HARNESS_DIR`. Ask the maintainers whether they can be published, or document how participants obtain them. |
 | 3 | Pending Falcon records | 🟡 waiting | Two cheaper Falcon trees are ready (local 9-block fixture 27,748,819 and 27,493,491 gas); swap `falcon_record_repo` and the patch once one becomes the official record. |
 | 4 | Phase 2: quantum-safe L1 simulation | 🔴 idea | Blocks of Falcon-signed private payments proved by both provers; decide scope (maybe simpler) before building. See `docs/STATUS-archive.md` 2026-10-19 for the agreed flow. |
-| 5 | Sequential-mode sample run | 🔴 | Record a "one after the other" run (each side on the full machine) and offer both replays. |
+| 5 | Show build identity on each side | 🔴 | `/api/config` could report a sha256 / `git describe` per binary and tree so the labels in `races.json` are checked, not trusted (senior review, 2026-10-19). |
 | 6 | One-button "submit the improvements" | 🔴 idea | Owner idea: a button that also pushes pending improvements; needs a design that never submits without an explicit confirmation. |
 
 ## Traps
 - The original light prover needs about 14 GiB of free memory; on smaller machines it fails and the lane says so.
-- Side-by-side mode halves the cores per side, so the fast-lane ratio is lower than the board's (1.85x here vs 2.0x on the evaluator).
+- Side-by-side mode halves the cores per side. On hybrid CPUs each core type is split evenly (`cpu_halves`); a naive half split once gave one side all the performance cores.
+- Local Intel ratios for the fast lane (2.6x to 2.9x) are higher than the board's 2.0x on the evaluator's Zen 3 host; always show both.
+- Peak memory of the original light prover varies run to run (13.4 to 14.3 GiB here).
 - snforge compiles on first run; the first Falcon race takes longer than later ones.

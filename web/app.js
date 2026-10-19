@@ -3,7 +3,7 @@ const $ = (sel, el = document) => el.querySelector(sel);
 const GiB = 1024 ** 3;
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-const state = { lanes: [], view: {}, source: null };
+const state = { lanes: [], view: {}, source: null, replayTimer: null, eyebrow: "" };
 
 const fmt = {
   s: (v) => `${v.toFixed(v < 100 ? 2 : 1)} s`,
@@ -40,10 +40,12 @@ async function init() {
     drawPlot(lane.id);
   });
   loadPeople();
-  if (new URLSearchParams(location.search).has("replay")) replay();
+  const rp = new URLSearchParams(location.search).get("replay");
+  if (rp !== null) replay(rp === "sequential" ? "sample-run-sequential.json" : "sample-run.json");
   $("#go").addEventListener("click", toggle);
+  state.eyebrow = $(".eyebrow").textContent;
   window.addEventListener("keydown", (e) => {
-    if (e.target.closest("input, textarea")) return;
+    if (e.target.closest("input, textarea") || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
     if (e.key === "r" || e.key === "R") start();
     if (e.key === "Escape") stop();
   });
@@ -51,13 +53,15 @@ async function init() {
 }
 
 // Replay of a recorded run (web/data/sample-run.json), clearly labelled: for screenshots and machines without builds.
-async function replay() {
-  const run = await (await fetch("data/sample-run.json")).json();
+async function replay(file) {
+  const run = await (await fetch(`data/${file}`)).json();
+  document.querySelector(`input[name="mode"][value="${run.mode}"]`).checked = true;
   $(".eyebrow").textContent = `Replay · a run recorded on ${run.recorded} · press Run to measure live`;
   const box = $("#setup");
   box.hidden = false;
   box.classList.add("replay");
-  box.textContent = `Replay of a ${run.mode} run recorded on ${run.recorded} on ${run.machine}. Every number below was measured in that run.`;
+  const how = run.mode === "parallel" ? "side by side, each side on its own half of each core type" : "one after the other, each side on the whole machine";
+  box.textContent = `Replay of a run recorded on ${run.recorded} on ${run.machine}, ${how}. Every number below was measured in that run.`;
   for (const lane of state.lanes) reset(lane.id);
   let i = 0;
   const step = () => {
@@ -65,9 +69,16 @@ async function replay() {
       const ev = run.events[i++];
       if (ev.type !== "end") handle(ev);
     }
-    if (i < run.events.length) setTimeout(step, 16);
+    state.replayTimer = i < run.events.length ? setTimeout(step, 16) : null;
   };
   step();
+}
+
+function notice(text) {
+  const box = $("#setup");
+  box.hidden = false;
+  box.classList.remove("replay");
+  box.textContent = text;
 }
 
 function showSetup(missing) {
@@ -78,8 +89,21 @@ function showSetup(missing) {
 
 function toggle() { state.source ? stop() : start(); }
 
-function start() {
+function stopReplay() {
+  clearTimeout(state.replayTimer);
+  state.replayTimer = null;
+  $(".eyebrow").textContent = state.eyebrow;
+  const box = $("#setup");
+  if (box.classList.contains("replay")) { box.hidden = true; box.classList.remove("replay"); }
+}
+
+async function start() {
   if (state.source) return;
+  stopReplay();
+  try {
+    const st = await (await fetch("/api/status")).json();
+    if (st.busy) { notice("A race is still running or stopping. Try again in a few seconds."); return; }
+  } catch { notice("The race server is not reachable. Start it with make run."); return; }
   for (const lane of state.lanes) reset(lane.id);
   const mode = document.querySelector('input[name="mode"]:checked').value;
   const src = new EventSource(`/api/race?mode=${mode}`);
@@ -143,7 +167,10 @@ function handle(ev) {
       }
       if (ev.mode === "sequential" && lane.kind !== "gas") setChip(ev.lane, "record", "", "next");
     }
-    if (ev.state === "error") for (const side of ["original", "record"]) setChip(ev.lane, side, "bad", "error");
+    if (ev.state === "error") {
+      for (const side of ["original", "record"]) setChip(ev.lane, side, "bad", "error");
+      $(".r-sub", sideEl(ev.lane, "original")).textContent = ev.error;
+    }
     return;
   }
   if (ev.type === "tick") {
@@ -170,7 +197,7 @@ function handle(ev) {
     if (lane.kind !== "gas") {
       $(".r-main", s).textContent = lane.metric === "memory" ? fmt.gib(ev.peak) : fmt.s(ev.t);
       $(".r-sub", s).textContent = lane.metric === "memory" ? `peak · ${fmt.s(ev.t)}` : `peak ${fmt.gib(ev.peak)}`;
-      setChip(ev.lane, ev.side, "run", "verifying");
+      setChip(ev.lane, ev.side, "", "proof done");
     }
     schedule(ev.lane);
     return;
@@ -207,7 +234,7 @@ function verdict(lane) {
   if (!a || !b) return;
   let ratio, text;
   if (lane.kind === "gas") {
-    if (!a.gas || !b.gas) return;
+    if (!a.ok || !b.ok || !a.gas || !b.gas) return;
     ratio = a.gas / b.gas; text = "cheaper to verify";
   } else {
     if (a.verified === undefined || b.verified === undefined || !a.verified || !b.verified) return;
@@ -301,7 +328,21 @@ async function loadPeople() {
     const ul = $("#people");
     for (const p of data.people) {
       const li = document.createElement("li");
-      li.innerHTML = `<a href="https://github.com/${p.login}" target="_blank" rel="noopener"><img alt="" loading="lazy" src="https://avatars.githubusercontent.com/u/${p.user_id}?s=128"><span>@${p.login}</span><span class="n">${p.activity} contributions</span></a>`;
+      const a = document.createElement("a");
+      a.href = `https://github.com/${encodeURIComponent(p.login)}`;
+      a.target = "_blank";
+      a.rel = "noopener";
+      const img = document.createElement("img");
+      img.alt = "";
+      img.loading = "lazy";
+      img.src = `https://avatars.githubusercontent.com/u/${Number(p.user_id)}?s=128`;
+      const name = document.createElement("span");
+      name.textContent = `@${p.login}`;
+      const n = document.createElement("span");
+      n.className = "n";
+      n.textContent = `${p.activity} contributions`;
+      a.append(img, name, n);
+      li.append(a);
       ul.append(li);
     }
     $("#people-source").textContent = `Source: provably.fast public participation table (consented public activity), fetched ${data.fetched}. Avatars from GitHub.`;

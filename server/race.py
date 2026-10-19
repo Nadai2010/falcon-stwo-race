@@ -1,10 +1,12 @@
-"""Race runner: start the original and the record of a lane side by side and stream what they measure.
+"""Race runner: start the original and the record of a lane and stream what they measure.
 
 Every number the dashboard shows comes from here: wall time from a monotonic clock, peak memory from the
-prover's own VmHWM in /proc, verification from the verifier's verdict, Sierra gas from snforge's report.
+kernel's accounting of the prover process (VmHWM while it runs, ru_maxrss when it is reaped), verification
+from the season's verifier, Sierra gas from snforge's report.
 """
 from __future__ import annotations
 
+import atexit
 import json
 import os
 import re
@@ -20,9 +22,14 @@ from typing import Callable, Iterator
 
 ROOT = Path(__file__).resolve().parent.parent
 POLL_S = 0.1
-GAS_RE = re.compile(r"bench_verify_falcon_512_shake \(.*?l2_gas: ~(\d+)")
+VERIFY_TIMEOUT_S = 300
+GAS_RE = re.compile(r"\[PASS\][^\n]*bench_verify_falcon_512_shake \(.*?l2_gas: ~(\d+)")
 
 Emit = Callable[[dict], None]
+
+
+class LaneError(Exception):
+    """A lane cannot run (missing build, failed spawn); reported to the UI as the lane's error."""
 
 
 def load_config() -> dict:
@@ -51,10 +58,63 @@ def read_status(pid: int) -> tuple[int, int]:
     return kb("VmRSS"), kb("VmHWM")
 
 
+def parse_cpulist(text: str) -> set[int]:
+    out: set[int] = set()
+    for part in text.strip().split(","):
+        if part:
+            lo, _, hi = part.partition("-")
+            out.update(range(int(lo), int(hi or lo) + 1))
+    return out
+
+
 def cpu_halves() -> tuple[set[int], set[int]]:
-    cpus = sorted(os.sched_getaffinity(0))
-    half = len(cpus) // 2
-    return set(cpus[:half]), set(cpus[half:])
+    """Two equal halves of the usable CPUs. On hybrid CPUs (performance + efficiency cores) each kind is
+    split evenly, so neither side gets all the fast cores; otherwise CPUs are dealt alternately. An odd CPU
+    out is left unused so both sides get the same count."""
+    usable = os.sched_getaffinity(0)
+    groups = []
+    for kind in ("cpu_core", "cpu_atom"):
+        try:
+            groups.append(sorted(parse_cpulist(Path(f"/sys/devices/{kind}/cpus").read_text()) & usable))
+        except OSError:
+            pass
+    if not groups or set().union(*map(set, groups)) != usable:
+        groups = [sorted(usable)]
+    a: list[int] = []
+    b: list[int] = []
+    for group in groups:
+        a += group[0::2]
+        b += group[1::2]
+    n = min(len(a), len(b))
+    if n == 0:
+        raise LaneError("side-by-side mode needs at least two CPUs")
+    return set(a[:n]), set(b[:n])
+
+
+# Every live child, so that nothing survives the server (atexit, SIGTERM) or a cancelled race.
+_LIVE: set[subprocess.Popen] = set()
+_LIVE_LOCK = threading.Lock()
+
+
+def _kill(proc: subprocess.Popen) -> None:
+    try:
+        os.killpg(proc.pid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        pass
+    try:
+        proc.wait(timeout=5)
+    except (subprocess.TimeoutExpired, ChildProcessError):
+        pass
+
+
+def kill_all() -> None:
+    with _LIVE_LOCK:
+        live = list(_LIVE)
+    for proc in live:
+        _kill(proc)
+
+
+atexit.register(kill_all)
 
 
 @dataclass
@@ -75,80 +135,106 @@ class Side:
 
 
 class Race:
-    """One run of one or more lanes. `cancel()` kills every process it started."""
+    """One run of one or more lanes. `cancel()` kills every process it started or is about to start."""
 
     def __init__(self, config: dict, emit: Emit, mode: str = "parallel"):
         self.config, self.emit, self.mode = config, emit, mode
-        self.sides: list[Side] = []
         self.cancelled = threading.Event()
-        self.workdir = Path(tempfile.mkdtemp(prefix="race-", dir=ROOT / "runs" if (ROOT / "runs").exists() else None))
+        self.lock = threading.Lock()
+        self.procs: list[subprocess.Popen] = []
+        runs = ROOT / "runs"
+        self.workdir = Path(tempfile.mkdtemp(prefix="race-", dir=runs if runs.is_dir() else None))
 
     # -- process plumbing -------------------------------------------------------------------------------
     def _spawn(self, s: Side) -> None:
-        env = os.environ | s.env
-        # Files, not pipes: a chatty process (snforge compiling) must never block on a full pipe.
+        if self.cancelled.is_set():
+            raise LaneError("cancelled")
         if s.stdout_path is None:
             s.stdout_path = self.workdir / f"{s.lane}-{s.side}.out"
-        out = open(s.stdout_path, "wb")
-        err = open(self.workdir / f"{s.lane}-{s.side}.err", "wb")
-        cpus = s.cpus
-        def pre() -> None:
-            os.setsid()
-            if cpus:
-                os.sched_setaffinity(0, cpus)
-        s.start = time.monotonic()
-        s.proc = subprocess.Popen(s.cmd, cwd=s.cwd, env=env, stdout=out, stderr=err, preexec_fn=pre)
-        out.close()
-        err.close()
-        self.sides.append(s)
+        cmd = (["taskset", "-c", ",".join(map(str, sorted(s.cpus)))] if s.cpus else []) + s.cmd
+        # Files, not pipes: a chatty process (snforge compiling) must never block on a full pipe.
+        with open(s.stdout_path, "wb") as out, open(self.workdir / f"{s.lane}-{s.side}.err", "wb") as err:
+            with self.lock:
+                if self.cancelled.is_set():
+                    raise LaneError("cancelled")
+                s.start = time.monotonic()
+                try:
+                    s.proc = subprocess.Popen(cmd, cwd=s.cwd, env=os.environ | s.env, stdout=out, stderr=err,
+                                              start_new_session=True)
+                except OSError as exc:
+                    raise LaneError(f"cannot start {s.cmd[0]}: {exc.strerror}") from exc
+                self.procs.append(s.proc)
+                with _LIVE_LOCK:
+                    _LIVE.add(s.proc)
 
     def cancel(self) -> None:
-        self.cancelled.set()
-        for s in self.sides:
-            if s.proc and s.proc.poll() is None:
-                try:
-                    os.killpg(s.proc.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
+        with self.lock:
+            self.cancelled.set()
+            procs = list(self.procs)
+        for proc in procs:
+            if proc.returncode is None:
+                _kill(proc)
+
+    def _reap(self, s: Side) -> bool:
+        """Reap the side if it exited: exact end time and the kernel's peak RSS (ru_maxrss)."""
+        try:
+            pid, status, usage = os.wait4(s.proc.pid, os.WNOHANG)
+        except ChildProcessError:
+            return True
+        if pid == 0:
+            return False
+        s.seconds = round(time.monotonic() - s.start, 2)
+        s.proc.returncode = os.waitstatus_to_exitcode(status)
+        s.returncode = s.proc.returncode
+        s.peak = max(s.peak, usage.ru_maxrss * 1024)
+        with _LIVE_LOCK:
+            _LIVE.discard(s.proc)
+        return True
 
     def _watch(self, sides: list[Side]) -> None:
         """Poll until every side exits, streaming elapsed time and memory."""
         pending = list(sides)
         while pending and not self.cancelled.is_set():
             for s in list(pending):
-                rss, hwm = read_status(s.proc.pid)
-                s.peak = max(s.peak, hwm)
-                rc = s.proc.poll()
-                now = time.monotonic() - s.start
-                if rc is None:
-                    self.emit({"type": "tick", "lane": s.lane, "side": s.side, "t": round(now, 2),
-                               "rss": rss, "peak": s.peak})
+                if not self._reap(s):
+                    rss, hwm = read_status(s.proc.pid)
+                    s.peak = max(s.peak, hwm)
+                    self.emit({"type": "tick", "lane": s.lane, "side": s.side,
+                               "t": round(time.monotonic() - s.start, 2), "rss": rss, "peak": s.peak})
                     continue
-                s.seconds, s.returncode = round(now, 2), rc
                 err = (self.workdir / f"{s.lane}-{s.side}.err").read_text(errors="replace")
                 s.output = "" if s.stdout_path.suffix == ".proof" else s.stdout_path.read_text(errors="replace")
-                if rc != 0:
+                if s.returncode != 0:
                     s.output += "\n" + err
                 pending.remove(s)
                 self.emit({"type": "done", "lane": s.lane, "side": s.side, "t": s.seconds, "peak": s.peak,
-                           "ok": rc == 0, "tail": "" if rc == 0 else s.output[-600:]})
+                           "ok": s.returncode == 0, "tail": "" if s.returncode == 0 else s.output[-600:]})
             time.sleep(POLL_S)
+
+    def _preflight(self, *paths: str) -> None:
+        missing = [p for p in paths if not Path(p).exists()]
+        if missing:
+            raise LaneError("not built: " + ", ".join(missing))
 
     # -- lanes -------------------------------------------------------------------------------------------
     def _prover_lane(self, lane: dict) -> None:
         paths = self.config["paths"]
         statement = paths[lane["statement"]]
+        self._preflight(statement, *(expand(lane[n][k][:1], paths)[0] for n in ("original", "record")
+                                     for k in ("prove", "verify")))
         preimage = self.workdir / f"{lane['id']}-preimage.json"
         with open(statement, "rb") as fh:
             preimage.write_text(json.dumps(json.loads(fh.readline())["output_preimage"]))
-        a, b = cpu_halves() if self.mode == "parallel" else (None, None)
-        threads = str(len(a)) if a else lane.get("threads", "16")
-        sides = []
-        for name, cpus in (("original", a), ("record", b)):
-            spec = lane[name]
-            sides.append(Side(lane["id"], name, expand(spec["prove"], paths, {"statement": statement}),
-                              env={"RAYON_NUM_THREADS": threads}, cpus=cpus,
-                              stdout_path=self.workdir / f"{lane['id']}-{name}.proof"))
+        if self.mode == "parallel":
+            a, b = cpu_halves()
+            threads = len(a)
+        else:
+            a = b = None
+            threads = len(os.sched_getaffinity(0))
+        sides = [Side(lane["id"], name, expand(lane[name]["prove"], paths, {"statement": statement}),
+                      env={"RAYON_NUM_THREADS": str(threads)}, cpus=cpus,
+                      stdout_path=self.workdir / f"{lane['id']}-{name}.proof")
+                 for name, cpus in (("original", a), ("record", b))]
         self.emit({"type": "lane", "lane": lane["id"], "state": "running", "mode": self.mode, "threads": threads})
         if self.mode == "parallel":
             for s in sides:
@@ -162,15 +248,27 @@ class Race:
             if self.cancelled.is_set() or s.returncode != 0:
                 continue
             verify = expand(lane[s.side]["verify"], paths, {"proof": str(s.stdout_path), "preimage": str(preimage)})
-            done = subprocess.run(verify, capture_output=True, text=True)
-            ok = done.stdout.startswith("PRIVACY_VERIFY\tACCEPTED")
+            v = Side(lane["id"], f"{s.side}-verify", verify)
+            self._spawn(v)
+            try:
+                v.proc.wait(timeout=VERIFY_TIMEOUT_S)
+            except subprocess.TimeoutExpired:
+                _kill(v.proc)
+            with _LIVE_LOCK:
+                _LIVE.discard(v.proc)
+            ok = v.stdout_path.read_text(errors="replace").startswith("PRIVACY_VERIFY\tACCEPTED")
             self.emit({"type": "verified", "lane": lane["id"], "side": s.side, "ok": ok,
                        "bytes": s.stdout_path.stat().st_size})
 
     def _falcon_lane(self, lane: dict) -> None:
+        # Gas is deterministic, so both snforge runs always go side by side whatever the mode.
         paths = self.config["paths"]
-        sides = [Side(lane["id"], name, ["snforge", "test", lane["test"]], cwd=paths[lane[name]["repo"]])
-                 for name in ("original", "record")]
+        repos = [paths[lane[name]["repo"]] for name in ("original", "record")]
+        self._preflight(*repos)
+        if not shutil.which("snforge"):
+            raise LaneError("snforge (Starknet Foundry) is not on PATH")
+        sides = [Side(lane["id"], name, ["snforge", "test", lane["test"]], cwd=repo)
+                 for name, repo in zip(("original", "record"), repos)]
         self.emit({"type": "lane", "lane": lane["id"], "state": "running", "mode": "parallel"})
         for s in sides:
             self._spawn(s)
@@ -178,20 +276,34 @@ class Race:
         for s in sides:
             m = GAS_RE.search(s.output)
             self.emit({"type": "gas", "lane": lane["id"], "side": s.side, "gas": int(m.group(1)) if m else None,
-                       "ok": bool(m) and "[PASS]" in s.output})
+                       "ok": bool(m) and s.returncode == 0})
 
     def run(self, lane_ids: list[str]) -> None:
         lanes = {l["id"]: l for l in self.config["lanes"]}
-        for lid in lane_ids:
-            if self.cancelled.is_set():
-                break
-            lane = lanes[lid]
-            try:
-                (self._falcon_lane if lane["kind"] == "gas" else self._prover_lane)(lane)
-                self.emit({"type": "lane", "lane": lid, "state": "finished"})
-            except (OSError, KeyError, ValueError) as exc:
-                self.emit({"type": "lane", "lane": lid, "state": "error", "error": str(exc)})
-        self.emit({"type": "end", "cancelled": self.cancelled.is_set()})
+        try:
+            for lid in lane_ids:
+                if self.cancelled.is_set():
+                    break
+                lane = lanes[lid]
+                try:
+                    (self._falcon_lane if lane["kind"] == "gas" else self._prover_lane)(lane)
+                    self.emit({"type": "lane", "lane": lid, "state": "finished"})
+                except Exception as exc:  # any failure ends this lane cleanly and stops its processes
+                    self.cancel_lane()
+                    if not self.cancelled.is_set():
+                        self.emit({"type": "lane", "lane": lid, "state": "error", "error": str(exc)})
+        finally:
+            self.emit({"type": "end", "cancelled": self.cancelled.is_set()})
+
+    def cancel_lane(self) -> None:
+        """Kill this race's processes without cancelling the race (a lane failed; later lanes may run)."""
+        with self.lock:
+            procs = list(self.procs)
+        for proc in procs:
+            if proc.returncode is None:
+                _kill(proc)
+                with _LIVE_LOCK:
+                    _LIVE.discard(proc)
 
 
 def stream(config: dict, lane_ids: list[str], mode: str) -> Iterator[dict]:
@@ -209,10 +321,8 @@ def stream(config: dict, lane_ids: list[str], mode: str) -> Iterator[dict]:
     try:
         while True:
             with cond:
-                while sent == len(events):
+                if sent == len(events):
                     cond.wait(timeout=15)
-                    if sent == len(events):
-                        break
                 batch, sent = events[sent:], len(events)
             if not batch:
                 yield {"type": "ping"}
@@ -223,5 +333,5 @@ def stream(config: dict, lane_ids: list[str], mode: str) -> Iterator[dict]:
                     return
     finally:
         race.cancel()
-        worker.join(timeout=5)
+        worker.join(timeout=VERIFY_TIMEOUT_S)
         shutil.rmtree(race.workdir, ignore_errors=True)

@@ -8,7 +8,7 @@
 
 ## Light prover (season 1)
 - Original: `dd1787bc`, the unmodified prover. Record: the lowest measured peak of season 1, job `7bb39eeb`.
-- Number: peak resident memory (`VmHWM`) of the prover process. Time is shown too; the light record is not tuned for speed.
+- Number: peak resident memory of the prover process (`VmHWM` live, the kernel's `ru_maxrss` at exit). Time is shown too; the light record is not tuned for speed.
 - Official: 13.9 GiB to 1.04 GiB (season 1 summary on stwo.provably.fast).
 
 ## Falcon-512
