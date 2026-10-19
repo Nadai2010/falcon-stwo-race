@@ -18,7 +18,10 @@ GET /api/race?mode=… (SSE) ────▶   one race at a time (lock) ──�
 | `done` | `lane`, `side`, `t`, `peak`, `ok`, `tail` | the process exited (`tail` = last stderr on failure) |
 | `verified` | `lane`, `side`, `ok`, `bytes` | the season's verifier accepted (or rejected) the proof |
 | `gas` | `lane`, `side`, `gas`, `ok` | Sierra gas parsed from snforge's report |
+| `mainnet` | `lane`, `state` (`running`, `done` with `data`, `recorded`) | mainnet price of one Falcon-signed transaction per account (simulation) |
 | `end` | `cancelled` | race over |
+
+`GET /api/price` returns the live STRK/USD price (`usd`, `source`, `fetched`), cached for 60 s: CoinGecko first, then Binance.
 
 ## Process handling
 - Each side runs in its own session (`setsid`), so Stop or a closed page kills the whole process group.

@@ -1,5 +1,10 @@
 # STATUS archive (append-only, newest first)
 
+## 2026-10-19: Mainnet price in the Falcon card, quieter design
+- After the Falcon race the server simulates on Starknet mainnet (declare, deploy, one Falcon-signed transfer per account; validation on, SKIP_FEE_CHARGE, nothing broadcast) and the card shows STRK and live USD; both signatures are redrawn until they need the same SHAKE block count. Last simulation: 53.5M vs 32.3M L2 gas, 0.831 vs 0.502 STRK (1.65x).
+- `/api/price`: live STRK/USD from CoinGecko, then Binance; no stored rate anywhere (rule added to `.claude/rules/workflow.md`).
+- Design: no glows or neon; status as uppercase text with a thin check, spinner or cross; the active card gets a plain accent line.
+
 ## 2026-10-19: One-screen layout
 - The fit-to-screen view is now the only layout: three cards side by side, run controls and contributors (colour avatar stack with names on hover) in a dock under the cards, a footnote on why numbers differ per machine and the non-affiliation disclaimer. Each card links to its provably.fast challenge; the header links to this repository.
 - Owner decision: phase 2 (simulated L1 blocks) is dropped; next is a simple mainnet comparison of the two Falcon accounts.

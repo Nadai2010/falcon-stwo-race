@@ -9,6 +9,8 @@ import mimetypes
 import signal
 import sys
 import threading
+import time
+import urllib.request
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -19,6 +21,31 @@ import race  # noqa: E402
 
 WEB = race.ROOT / "web"
 BUSY = threading.Lock()
+
+# STRK/USD is always fetched live (never stored in the code): CoinGecko first, then Binance's STRKUSDT.
+PRICE_SOURCES = (
+    ("CoinGecko", "https://api.coingecko.com/api/v3/simple/price?ids=starknet&vs_currencies=usd",
+     lambda d: float(d["starknet"]["usd"])),
+    ("Binance", "https://api.binance.com/api/v3/ticker/price?symbol=STRKUSDT", lambda d: float(d["price"])),
+)
+PRICE_TTL_S = 60
+_price_cache: dict = {}
+
+
+def strk_usd() -> dict:
+    now = time.time()
+    if _price_cache and now - _price_cache["at"] < PRICE_TTL_S:
+        return _price_cache["value"]
+    for name, url, pick in PRICE_SOURCES:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "falcon-stwo-race"})
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                value = {"usd": pick(json.load(resp)), "source": name, "fetched": int(now)}
+            _price_cache.update(at=now, value=value)
+            return value
+        except (OSError, ValueError, KeyError):
+            continue
+    return {"usd": None, "source": None, "fetched": int(now)}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -63,6 +90,9 @@ class Handler(BaseHTTPRequestHandler):
         url = urlparse(self.path)
         if url.path.startswith("/api/") and not self._local():
             self._json({"error": "local page only"}, HTTPStatus.FORBIDDEN)
+            return
+        if url.path == "/api/price":
+            self._json(strk_usd())
             return
         if url.path == "/api/status":
             self._json({"busy": BUSY.locked()})
