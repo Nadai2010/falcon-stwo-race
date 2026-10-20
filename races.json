@@ -3,7 +3,7 @@
     "fast_original_prove": "build/stwo-pinned/target/release/privacy_prove_stdout",
     "fast_original_verify": "build/stwo-pinned/target/release/privacy_verify",
     "fast_record_prove": "build/stwo-fast-record/target/release/privacy_prove_stdout",
-    "fast_record_verify": "build/stwo-fast-record/target/release/privacy_verify",
+    "fast_record_verify": "build/stwo-pinned/target/release/privacy_verify",
     "light_original_prove": "build/stwo-s1-original/target/release/privacy_prove_stdout",
     "light_original_verify": "build/stwo-s1-original/target/release/privacy_verify",
     "light_record_prove": "build/stwo-s1-light-record/target/release/privacy_prove_stdout",
@@ -23,7 +23,7 @@
       "subtitle": "One full proof of a private transaction at 100 provable bits",
       "statement": "s2_statement",
       "original": {
-        "label": "Stwo, pinned prover d6276445",
+        "label": "Stwo at the start of step two, 1d7c6f75 (90 provable bits)",
         "prove": [
           "{fast_original_prove}",
           "{statement}"
@@ -41,13 +41,13 @@
           "{statement}"
         ],
         "verify": [
-          "{fast_original_verify}",
+          "{fast_record_verify}",
           "{proof}",
           "{preimage}"
         ]
       },
       "official": {
-        "text": "Board: 2.67× faster than Stwo's 100-bit base, record by @omarespejel (19 Oct), beating @nadai2010's 2.64×.",
+        "text": "Board: 2.67× faster since step two began, while security went up from 90 to 100 provable bits. Record by @omarespejel (19 Oct), beating @nadai2010's 2.64×.",
         "source": "https://stwo.provably.fast/",
         "date": "checked 2026-10-20"
       },

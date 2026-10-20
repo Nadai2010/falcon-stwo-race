@@ -46,16 +46,17 @@ def load_config() -> dict:
 
 def synced_frontier(paths: dict) -> dict | None:
     """The builds scripts/sync_frontier.sh made for the live frontiers (build/frontier.json), put in place of the
-    fast and Falcon lanes' paths: the fast lane then races the season's pinned prover against the promoted
-    frontier, both built with the evaluator's flags. None (and the configured paths) until a sync has run."""
+    fast and Falcon lanes' paths: the fast lane then races the prover step two began with (90 provable bits)
+    against the promoted frontier (100 provable bits, checked by the pinned 100-bit verifier), as the board
+    measures its speed, all built with the evaluator's flags. None (and the configured paths) until a sync has run."""
     try:
         f = json.loads((ROOT / "build" / "frontier.json").read_text())
     except (OSError, ValueError):
         return None
-    pinned, record = f["fast"]["pinned"], f["fast"]["record"]
+    start, pinned, record = f["fast"]["start"], f["fast"]["pinned"], f["fast"]["record"]
     paths.update({
-        "fast_original_prove": f"{pinned}/target/release/privacy_prove_stdout",
-        "fast_original_verify": f"{pinned}/target/release/privacy_verify",
+        "fast_original_prove": f"{start}/target/release/privacy_prove_stdout",
+        "fast_original_verify": f"{start}/target/release/privacy_verify",
         "fast_record_prove": f"{record}/target/release/privacy_prove_stdout",
         "fast_record_verify": f"{pinned}/target/release/privacy_verify",
         "falcon_record_repo": f["falcon"]["record"],
