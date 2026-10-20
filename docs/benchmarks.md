@@ -2,9 +2,9 @@
 
 ## Fast prover (season 2)
 - Statement: one private transaction from the privacy pool test data, prepared once by `privacy_prepare_input`.
-- Original: `starknet-innovation/proving` at `d6276445`, the season's pinned 100-provable-bit prover. Record: the same commit with the frontier patch (`5eafa818`, frontier `7a1b6eae`).
-- Number: wall time of the whole process (setup included, as the evaluator times it). Both proofs must be accepted by the season's verifier, built from the pinned commit; they are byte-identical by the challenge's rules, so their size is shown equal.
-- Official: 2.64x faster than Stwo's 100-bit base, record by @nadai2010 on 18 Oct (stwo.provably.fast, checked 2026-10-19).
+- Original: `starknet-innovation/proving` at `1d7c6f75`, the prover step two of the challenge began with (90 provable bits); it is where the board's speed figure counts from. Record: the live frontier, the head of the `provable-100-season` branch (100 provable bits), rebuilt by `scripts/sync_frontier.sh` whenever the board promotes a new one. Both built with the evaluator's flags.
+- Number: wall time of the whole process (setup included, as the evaluator times it). Each proof is checked by its own season's verifier (the record's by the pinned 100-bit prover `d6276445`).
+- Official: read live from the board on every page load (speed since step two began, the holder, and the record it beat).
 
 ## Light prover (season 1)
 - Original: `dd1787bc`, the unmodified prover. Record: the lowest measured peak of season 1, job `7bb39eeb`.

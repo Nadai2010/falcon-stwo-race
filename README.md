@@ -19,21 +19,19 @@ On [provably.fast](https://provably.fast/), agents and people pushed three numbe
 
 | Lane | Original | Record | What is measured | Side by side | One after the other |
 |---|---|---|---|---|---|
-| Fast prover | Stwo pinned prover `d6276445` | job `5eafa818` (frontier `7a1b6eae`) | wall time of one full proof, setup included; both proofs checked by the season's verifier | 29.57 s vs 11.20 s, **2.64x** | 21.38 s vs 7.80 s, **2.74x** |
-| Light prover | Stwo unmodified, season 1 (`dd1787bc`) | job `7bb39eeb` | peak resident memory of the prover process (VmHWM) | 13.85 GiB vs 1.04 GiB, **13.4x** | 14.31 GiB vs 1.06 GiB, **13.5x** |
-| Falcon-512 | OpenZeppelin verifier `bece5c07` | job `fj_97a86d12` | Sierra gas of one verification (Starknet Foundry) | 50,190,408 vs 29,020,575, **1.73x** | same (gas is deterministic) |
+| Fast prover | Stwo where step two began, `1d7c6f75` (90 provable bits) | the live frontier (`618a96700` when recorded), 100 provable bits | wall time of one full proof, setup included; each proof checked by its season's verifier | 34.29 s vs 13.58 s, **2.52x** | 28.99 s vs 8.08 s, **3.59x** |
+| Light prover | Stwo unmodified, season 1 (`dd1787bc`) | job `7bb39eeb` | peak resident memory of the prover process (VmHWM) | 13.58 GiB vs 1.04 GiB, **13.1x** | 14.03 GiB vs 1.06 GiB, **13.2x** |
+| Falcon-512 | OpenZeppelin verifier `bece5c07` | the live record (`fj_97a86d12` when recorded) | Sierra gas of one verification (Starknet Foundry) | 50,190,408 vs 29,020,575, **1.73x** | same (gas is deterministic) |
+
+Both sides of the fast race are built with the evaluator's flags (`-C target-cpu=native -C opt-level=3 -C codegen-units=1`), so the race compares code, not compilers. The fast race starts from the prover the board's speed figure counts from, so it measures what the board measures, on your machine; the record proves at higher security (100 against 90 provable bits).
 
 After the Falcon race, the card also prices one Falcon-signed transaction of each account **on Starknet mainnet**: the dashboard declares both account classes, deploys a Falcon account from each and signs one transaction with it, all inside `starknet_simulateTransactions` on the latest block (validation on, nothing broadcast, nothing paid). Both signatures are drawn until they need the same number of SHAKE blocks, so the comparison is fair. Last simulation (block 16,621,279): 53.5M vs 32.3M L2 gas, 0.831 vs 0.502 STRK, 1.65x cheaper. USD is always converted with a live price (CoinGecko, then Binance), never a stored rate. Without a local mainnet setup the card shows the last simulation, labelled as such ([docs/setup.md](docs/setup.md#mainnet-price)).
 
-Both runs were recorded on an Intel Core Ultra 9 275HX (8 performance + 16 efficiency cores, 62 GiB) and replay, labelled as replays, at [`/?replay`](http://127.0.0.1:8765/?replay) and [`/?replay=sequential`](http://127.0.0.1:8765/?replay=sequential) ([`web/data/`](web/data/)). The board's figure is shown beside each lane for comparison. Official board figures, on the evaluators' own hosts, are shown next to every lane with their source and date:
-
-- Fast: 2.64x faster than Stwo's 100-bit base, record by @nadai2010, 18 Oct ([stwo.provably.fast](https://stwo.provably.fast/), checked 2026-10-19).
-- Light: 13.4x less memory, 13.9 GiB to 1.04 GiB in season 1 ([stwo.provably.fast](https://stwo.provably.fast/)).
-- Falcon: 27,915,721 gas against 48,398,466, mean over 27 held-out signatures ([falcon.provably.fast](https://falcon.provably.fast/)).
+Both runs were recorded on an Intel Core Ultra 9 275HX (8 performance + 16 efficiency cores, 62 GiB) on 2026-10-20 and replay, labelled as replays with the builds they ran, at [`/?replay`](http://127.0.0.1:8765/?replay) and [`/?replay=sequential`](http://127.0.0.1:8765/?replay=sequential) ([`web/data/`](web/data/)). Each card reads the official board figure live from provably.fast on every page load: who holds the record, when, and whose record it beat ([stwo.provably.fast](https://stwo.provably.fast/), [falcon.provably.fast](https://falcon.provably.fast/)).
 
 Everything fits on one 16:9 screen (checked at 1920x1080 and 1440x900), so a screen recording needs no scrolling. Each card links to its challenge on provably.fast.
 
-A single race is one pair, so its ratio moves a few percent from run to run (thermal state, background load, how the scheduler places threads on performance and efficiency cores); on the sample machine the fast lane gave 2.47x to 2.64x side by side. The board's figures come from at least twelve pairs with a confidence interval.
+A single race is one pair, so its ratio moves a few percent from run to run (thermal state, background load, how the scheduler places threads on performance and efficiency cores); a laptop's figure is not the evaluator's: memory bandwidth, core types and thermals differ. The board's figures come from at least twelve pairs with a confidence interval.
 
 Your numbers will differ: they depend on your CPU. "Side by side" pins each build to its own half of every core type (performance and efficiency cores are split evenly); "one after the other" gives each build the whole machine.
 
