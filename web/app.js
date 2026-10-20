@@ -12,6 +12,39 @@ const fmt = {
   x: (r) => `${r.toFixed(r < 10 ? 2 : 1)}×`,
 };
 
+// The board line under a card's title: who holds the record now, with a link to its source.
+function setOfficial(el, text, source, date) {
+  const credit = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/@([\w-]+)/g, '<span class="who">@$1</span>');
+  $(".official", el).innerHTML = `${credit} <a href="${source}" target="_blank" rel="noopener">Source</a>, ${date}.`;
+}
+
+// Live board figures (server/board.py reads provably.fast on every load); a card whose source cannot be
+// read keeps the labelled text of races.json.
+async function loadBoard() {
+  let b;
+  try { b = await (await fetch("/api/board")).json(); } catch { return; }
+  const at = new Date(b.fetched * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const live = `read live at ${at}`;
+  const x = (v) => `${v.toFixed(2)}×`;
+  const m = (gas) => `${(gas / 1e6).toFixed(1)}M`;
+  for (const lane of state.lanes) {
+    const el = state.view[lane.id]?.el;
+    if (!el) continue;
+    if (lane.id === "fast" && b.fast) {
+      const f = b.fast;
+      const beat = f.beat && f.beat.holder !== f.holder ? `, beating @${f.beat.holder}'s ${x(f.beat.times)}` : "";
+      setOfficial(el, `Board: ${x(f.times)} faster than Stwo's 100-bit base, record by @${f.holder} (${f.date})${beat}.`, lane.official.source, live);
+    } else if (lane.id === "falcon" && b.falcon) {
+      const f = b.falcon;
+      const beat = f.beat ? (f.beat.holder === f.holder ? `, improving its own ${m(f.beat.gas)}` : `, beating @${f.beat.holder}'s ${m(f.beat.gas)}`) : "";
+      setOfficial(el, `Board: ${m(f.base_gas)} to ${m(f.gas)} gas (${x(f.times)}), record by @${f.holder} (${f.date})${beat}, mean of 27 signatures.`, lane.official.source, live);
+    } else if (lane.id === "light" && b.light && b.light.status === "CLOSED") {
+      const closed = new Date(`${b.light.closed}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+      setOfficial(el, `${lane.official.text.replace(/\.$/, "")}. Season closed ${closed}: final.`, lane.official.source, live);
+    }
+  }
+}
+
 async function init() {
   const cfg = await (await fetch("/api/config")).json();
   state.lanes = cfg.lanes;
@@ -25,8 +58,7 @@ async function init() {
     $(".kicker", el).textContent = lane.kicker;
     $(".lane-title", el).textContent = lane.title;
     $(".lane-sub", el).textContent = lane.subtitle;
-    const credit = lane.official.text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/@([\w-]+)/g, '<span class="who">@$1</span>');
-    $(".official", el).innerHTML = `${credit} <a href="${lane.official.source}" target="_blank" rel="noopener">Source</a>, ${lane.official.date}.`;
+    setOfficial(el, lane.official.text, lane.official.source, lane.official.date);
     const ch = $(".challenge", el);
     ch.href = lane.challenge.url;
     $("span", ch).textContent = lane.challenge.text;
@@ -44,6 +76,7 @@ async function init() {
     drawPlot(lane.id);
   });
   loadPeople();
+  loadBoard();
   clearMainnet();
   const rp = new URLSearchParams(location.search).get("replay");
   if (rp !== null) replay(rp === "sequential" ? "sample-run-sequential.json" : "sample-run.json");

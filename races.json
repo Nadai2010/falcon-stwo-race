@@ -47,9 +47,9 @@
         ]
       },
       "official": {
-        "text": "Board: 2.64× faster than Stwo's 100-bit base, record by @nadai2010 (18 Oct).",
+        "text": "Board: 2.67× faster than Stwo's 100-bit base, record by @omarespejel (19 Oct), beating @nadai2010's 2.64×.",
         "source": "https://stwo.provably.fast/",
-        "date": "checked 2026-10-19"
+        "date": "checked 2026-10-20"
       },
       "challenge": {
         "text": "Take the challenge",
@@ -89,9 +89,9 @@
         ]
       },
       "official": {
-        "text": "Board: 13.4× less memory, 13.9 GiB to 1.04 GiB, lowest peak by @nadai2010 (job 7bb39eeb).",
+        "text": "Board: 13.4× less memory, 13.9 GiB to 1.04 GiB, lowest measured peak by @nadai2010 (job 7bb39eeb).",
         "source": "https://stwo.provably.fast/",
-        "date": "checked 2026-10-19"
+        "date": "checked 2026-10-20"
       },
       "challenge": {
         "text": "See the season",
@@ -117,7 +117,7 @@
       "official": {
         "text": "Board: 48.4M to 27.9M gas (1.73×), record by @nadai2010 (18 Oct), mean of 27 signatures.",
         "source": "https://falcon.provably.fast/",
-        "date": "checked 2026-10-19"
+        "date": "checked 2026-10-20"
       },
       "challenge": {
         "text": "Take the challenge",

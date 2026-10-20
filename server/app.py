@@ -17,6 +17,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import board  # noqa: E402
 import race  # noqa: E402
 
 WEB = race.ROOT / "web"
@@ -93,6 +94,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if url.path == "/api/price":
             self._json(strk_usd())
+            return
+        if url.path == "/api/board":
+            self._json(board.board())
             return
         if url.path == "/api/status":
             self._json({"busy": BUSY.locked()})
