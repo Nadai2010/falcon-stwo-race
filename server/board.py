@@ -45,7 +45,9 @@ def fast(results: dict) -> dict:
             best = r
     holder = min(records, key=lambda r: abs(r["ratio"] - season["frontier"]["ratio"]))
     beaten = records[records.index(holder) - 1] if records.index(holder) > 0 else None
-    out = {"times": 1 / (base * holder["ratio"]), "holder": holder["github_login"],
+    # "times" is the board's figure, since step two began at 90 provable bits; "vs_pinned" is against the
+    # season's pinned 100-bit prover d6276445, which is what the fast lane races.
+    out = {"times": 1 / (base * holder["ratio"]), "vs_pinned": 1 / holder["ratio"], "holder": holder["github_login"],
            "date": _day(holder["evaluated_at"]), "commit": season["frontier"]["commit"][:9]}
     if beaten:
         out["beat"] = {"holder": beaten["github_login"], "times": 1 / (base * beaten["ratio"])}

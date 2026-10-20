@@ -83,7 +83,8 @@ def lane_labels(cfg: dict) -> dict:
         fast, falcon = live.get("fast") or {}, live.get("falcon") or {}
         commit = f["fast"]["commit"][:9]
         who = f" (@{fast['holder']})" if fast.get("commit") == commit else ""
-        labels["fast"] = {"original": "Stwo, pinned prover d6276445", "record": f"Frontier {commit}{who}"}
+        labels["fast"] = {"original": "Stwo at the start of step two, 1d7c6f75 (90 provable bits)",
+                          "record": f"Frontier {commit}{who}, 100 provable bits"}
         job = f["falcon"]["job"]
         who = f" (@{falcon['holder']})" if falcon.get("holder") else ""
         labels["falcon"] = {"record": f"Record {job[:11]}{who}"}

@@ -33,7 +33,7 @@ async function loadBoard() {
     if (lane.id === "fast" && b.fast) {
       const f = b.fast;
       const beat = f.beat && f.beat.holder !== f.holder ? `, beating @${f.beat.holder}'s ${x(f.beat.times)}` : "";
-      setOfficial(el, `Board: ${x(f.times)} faster than Stwo's 100-bit base, record by @${f.holder} (${f.date})${beat}.`, lane.official.source, live);
+      setOfficial(el, `Board: ${x(f.times)} faster since step two began, while security went up from 90 to 100 provable bits. Record by @${f.holder} (${f.date})${beat}.`, lane.official.source, live);
     } else if (lane.id === "falcon" && b.falcon) {
       const f = b.falcon;
       const beat = f.beat ? (f.beat.holder === f.holder ? `, improving its own ${m(f.beat.gas)}` : `, beating @${f.beat.holder}'s ${m(f.beat.gas)}`) : "";
