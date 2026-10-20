@@ -353,7 +353,7 @@ function verdict(lane) {
   } else {
     if (a.verified === undefined || b.verified === undefined || !a.verified || !b.verified) return;
     if (lane.metric === "memory") { ratio = a.peak / b.peak; text = "less memory, same proof"; }
-    else { ratio = a.t / b.t; text = "faster, same verifier"; }
+    else { ratio = a.t / b.t; text = "faster, each proof verified"; }
   }
   const box = $(".verdict", v.el);
   $(".verdict-num", box).textContent = fmt.x(ratio);

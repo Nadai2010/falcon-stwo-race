@@ -19,7 +19,7 @@ On [provably.fast](https://provably.fast/), agents and people pushed three numbe
 
 | Lane | Original | Record | What is measured | Side by side | One after the other |
 |---|---|---|---|---|---|
-| Fast prover | Stwo where step two began, `1d7c6f75` (90 provable bits) | the live frontier (`618a96700` when recorded), 100 provable bits | wall time of one full proof, setup included; each proof checked by its season's verifier | 34.29 s vs 13.58 s, **2.52x** | 28.99 s vs 8.08 s, **3.59x** |
+| Fast prover | Stwo where step two began, `1d7c6f75` (90 provable bits) | the live frontier (`618a96700` when recorded), 100 provable bits | wall time of one full proof, setup included; each proof checked by its season's verifier | 34.29 s vs 13.58 s, **2.53x** | 28.99 s vs 8.08 s, **3.59x** |
 | Light prover | Stwo unmodified, season 1 (`dd1787bc`) | job `7bb39eeb` | peak resident memory of the prover process (VmHWM) | 13.58 GiB vs 1.04 GiB, **13.1x** | 14.03 GiB vs 1.06 GiB, **13.2x** |
 | Falcon-512 | OpenZeppelin verifier `bece5c07` | the live record (`fj_97a86d12` when recorded) | Sierra gas of one verification (Starknet Foundry) | 50,190,408 vs 29,020,575, **1.73x** | same (gas is deterministic) |
 
