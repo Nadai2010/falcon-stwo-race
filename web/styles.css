@@ -73,7 +73,18 @@ body {
 .built img { width: 22px; height: 22px; border-radius: 6px; }
 
 /* Title row */
-.hero { padding: 0 0 clamp(28px, 5.5vh, 72px); }
+.hero { padding: 0 0 clamp(28px, 5.5vh, 72px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 30vw); gap: 32px; align-items: end; }
+/* The narrator: one line of context per phase of a race, beside the title (and in a screen recording). */
+.narrator { border-left: 2px solid var(--rec); padding: 2px 0 2px 18px; min-height: 96px; opacity: 0; animation: rise .8s var(--ease) forwards; animation-delay: 240ms; }
+.narrator.swap .n-step, .narrator.swap .n-title, .narrator.swap .n-body { animation: narrate .55s var(--ease) both; }
+.narrator.swap .n-title { animation-delay: 60ms; }
+.narrator.swap .n-body { animation-delay: 120ms; }
+.n-step { font: 400 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0.14em; color: var(--rec); margin: 0 0 6px; }
+.n-title { font: 800 clamp(18px, 1.5vw, 26px)/1.1 var(--display); text-transform: uppercase; margin: 0 0 6px; }
+.n-body { margin: 0; color: #c9c4b7; font-size: 13px; line-height: 1.5; max-width: 46ch; }
+@keyframes narrate { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (max-width: 1100px) { .hero { grid-template-columns: 1fr; gap: 18px; } }
+@media (prefers-reduced-motion: reduce) { .narrator.swap .n-step, .narrator.swap .n-title, .narrator.swap .n-body { animation: none; } }
 .eyebrow { font: 400 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin: 0 0 6px; }
 h1 { font: 900 clamp(40px, 4.4vw, 76px)/0.9 var(--display); text-transform: uppercase; letter-spacing: -0.01em; margin: 0; }
 h1 em { font-style: normal; color: var(--rec); }

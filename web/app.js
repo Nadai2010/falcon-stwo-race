@@ -12,6 +12,41 @@ const fmt = {
   x: (r) => `${r.toFixed(r < 10 ? 2 : 1)}×`,
 };
 
+// The narrator beside the title: what the current phase of a race is doing, then what it measured.
+const NARRATION = {
+  idle: ["Ready", "Three races, live on this machine", "Original against record, in the same configuration. Press Run to measure them here."],
+  start: ["Starting", "The same input on both sides", "Every race gives the original and the record the same statement, on this machine, and checks what they produce."],
+  fast: ["1 · Fast prover", "A full STARK proof at 100 provable bits", "Original: Stwo where step two of provably.fast began. Record: the live frontier, rebuilt whenever the board promotes a new one."],
+  light: ["2 · Light prover", "The same proof, in as little memory as possible", "Watch the peak: the record proves the same private transaction in a fraction of the memory."],
+  falcon: ["3 · Falcon-512", "A post-quantum signature, checked by a Starknet account", "OpenZeppelin's verifier against the record, counted in Sierra gas on the same signature."],
+  mainnet: ["Starknet mainnet", "Priced on live mainnet state", "Both accounts declared, deployed and used in one simulated transaction: nothing broadcast, the Falcon signature really verified."],
+  end: ["Done", "Measured live, nothing pre-recorded", "The record sides follow provably.fast's live records. Run it yourself with one command: make up."],
+};
+function narrate(step, title, body) {
+  const n = $("#narrator");
+  if (!n) return;
+  if (!title) [step, title, body] = NARRATION[step] || NARRATION.idle;
+  $(".n-step", n).textContent = step;
+  $(".n-title", n).textContent = title;
+  $(".n-body", n).textContent = body;
+  n.classList.remove("swap");
+  void n.offsetWidth; // restart the entrance of the new text
+  n.classList.add("swap");
+}
+// What a lane measured, once both sides are in: the narrator's line for its result.
+function narrateResult(lane) {
+  const v = state.view[lane.id], a = v.done.original, b = v.done.record;
+  if (!a || !b) return;
+  const n = { fast: "1 · Fast prover", light: "2 · Light prover", falcon: "3 · Falcon-512" }[lane.id] || lane.title;
+  if (lane.kind === "gas") {
+    if (!a.gas || !b.gas) return;
+    narrate(n, `${(a.gas / b.gas).toFixed(2)}× cheaper to verify`, `${(a.gas / 1e6).toFixed(1)}M against ${(b.gas / 1e6).toFixed(1)}M Sierra gas for the same Falcon-512 signature.`);
+  } else if (a.verified && b.verified) {
+    if (lane.metric === "memory") narrate(n, `${(a.peak / b.peak).toFixed(1)}× less memory, both proofs verified`, `Peak ${fmt.gib(a.peak)} against ${fmt.gib(b.peak)}, the same transaction proved on both sides.`);
+    else narrate(n, `${(a.t / b.t).toFixed(2)}× faster, both proofs verified`, `${fmt.s(a.t)} against ${fmt.s(b.t)}: the same transaction, each proof checked by its season's verifier.`);
+  }
+}
+
 // The board line under a card's title: who holds the record now, with a link to its source.
 function setOfficial(el, text, source, date) {
   const credit = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/@([\w-]+)/g, '<span class="who">@$1</span>');
@@ -77,6 +112,7 @@ async function init() {
   });
   loadPeople();
   loadBoard();
+  narrate("idle");
   clearMainnet();
   const rp = new URLSearchParams(location.search).get("replay");
   if (rp !== null) replay(rp === "sequential" ? "sample-run-sequential.json" : "sample-run.json");
@@ -168,6 +204,8 @@ async function start() {
   $(".go-run", go).setAttribute("aria-hidden", "true");
   $(".go-stop", go).removeAttribute("aria-hidden");
   setStatus("Starting…", true);
+  narrate("start");
+  state.narratedMainnet = false;
   src.onmessage = (m) => handle(JSON.parse(m.data));
   src.onerror = () => stop();
 }
@@ -214,7 +252,7 @@ function setChip(id, side, cls, text) {
 }
 
 function handle(ev) {
-  if (ev.type === "end") return stop();
+  if (ev.type === "end") { narrate("end"); return stop(); }
   const v = state.view[ev.lane];
   if (!v) return;
   const lane = state.lanes.find((l) => l.id === ev.lane);
@@ -223,6 +261,7 @@ function handle(ev) {
     if (ev.state === "running") {
       if (state.source && window.innerWidth < 1100) v.el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
       setStatus(`Racing: ${lane.title}`, true);
+      narrate(ev.lane);
       for (const side of ["original", "record"]) {
         setChip(ev.lane, side, "run", lane.kind === "gas" ? "compiling" : "proving");
         if (lane.kind === "gas") $(`.gasbar[data-side="${side}"]`, v.el).classList.add("scan");
@@ -269,9 +308,11 @@ function handle(ev) {
     v.done[ev.side].bytes = ev.bytes;
     setChip(ev.lane, ev.side, ev.ok ? "ok" : "bad", ev.ok ? "verified" : "rejected");
     verdict(lane);
+    narrateResult(lane);
     return;
   }
   if (ev.type === "mainnet") {
+    if (!state.narratedMainnet) { state.narratedMainnet = true; narrate("mainnet"); }
     mainnet(ev);
     return;
   }
@@ -291,6 +332,7 @@ function handle(ev) {
       $(`.gasbar[data-side="${k}"] b`, v.el).textContent = `${(g / 1e6).toFixed(1)}M gas`;
     }
     verdict(lane);
+    narrateResult(lane);
   }
 }
 
