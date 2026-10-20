@@ -13,25 +13,73 @@ const fmt = {
 };
 
 // The narrator beside the title: what the current phase of a race is doing, then what it measured.
+// The narrator tells each race as a short story: a lane's beats advance while it runs (the last
+// one holds), and its measured result replaces them once both sides are in. The idle beats loop.
 const NARRATION = {
-  idle: ["Ready", "Three races, live on this machine", "Original against record, in the same configuration. Press Run to measure them here."],
-  start: ["Starting", "The same input on both sides", "Every race gives the original and the record the same statement, on this machine, and checks what they produce."],
-  fast: ["1 · Fast prover", "A full STARK proof at 100 provable bits", "Original: Stwo where step two of provably.fast began. Record: the live frontier, rebuilt whenever the board promotes a new one."],
-  light: ["2 · Light prover", "The same proof, in as little memory as possible", "Watch the peak: the record proves the same private transaction in a fraction of the memory."],
-  falcon: ["3 · Falcon-512", "A post-quantum signature, checked by a Starknet account", "OpenZeppelin's verifier against the record, counted in Sierra gas on the same signature."],
-  mainnet: ["Starknet mainnet", "Priced on live mainnet state", "Both accounts declared, deployed and used in one simulated transaction: nothing broadcast, the Falcon signature really verified."],
-  end: ["Done", "Measured live, nothing pre-recorded", "The record sides follow provably.fast's live records. Run it yourself with one command: make up."],
+  idle: [
+    ["0 · The threat", "A large quantum computer breaks today's signatures", "Shor's algorithm recovers an ECDSA private key from its public key. STARK proofs rest only on hash functions, so they survive; account signatures need a post-quantum replacement."],
+    ["0.1 · Two fronts", "Faster proofs, cheaper post-quantum signatures", "Proofs are already post-quantum, but they cost time and memory. Post-quantum signatures are cheap off-chain and expensive to verify on-chain."],
+    ["0.2 · The arena", "Every number here is measured", "provably.fast measures each improvement on an independent machine: the same proof byte for byte, at least 1% better with 95% confidence."],
+    ["0.3 · Three races", "Original against record, live on this machine", "The same input on both sides, in the same configuration. Press Run to measure them here."],
+  ],
+  start: [["Starting", "The same input on both sides", "Every race gives the original and the record the same statement, on this machine, and checks what they produce."]],
+  fast: [
+    ["1 · Fast prover", "A full STARK proof at 100 provable bits", "Original: Stwo where step two of provably.fast began. Record: the live frontier, rebuilt whenever the board promotes a new one."],
+    ["1.1 · The statement", "A private transaction, proved twice over", "Cairo runs the privacy bootloader and Stwo proves that execution; then a circuit that verifies the Cairo proof is proved too: a recursive proof."],
+    ["1.2 · The field", "Circle STARKs over M31", "Every value lives modulo p = 2³¹ − 1 and fits in 32 bits, so AVX2 handles eight per instruction. The circle x² + y² = 1 over M31 gives the FFT its domains."],
+    ["1.3 · Where the time goes", "Extend, constrain, commit", "Each column is extended to a larger domain by a Circle FFT, every constraint is evaluated on it, and the columns are committed in BLAKE2s Merkle trees."],
+    ["1.4 · What the record changed", "Move less data, keep the cores busy", "Fused FFT butterflies, QM31 Karatsuba in registers, 8-lane BLAKE2s, the composition in cache-sized blocks, the Cairo and circuit proofs side by side."],
+    ["1.5 · The check", "Byte for byte the same proof", "The record must output exactly the original's proof, and each proof is checked by its own season's verifier."],
+  ],
+  light: [
+    ["2 · Light prover", "The same proof, in as little memory as possible", "Watch the peak: the record proves the same private transaction in a fraction of the memory."],
+    ["2.1 · Why memory", "Proving on modest hardware", "The original keeps whole extended columns in memory. The less a proof needs, the closer it gets to laptops and phones."],
+    ["2.2 · Recompute, don't store", "Merkle trees stripe by stripe", "The record extends each column one stripe of the circle domain at a time, hashes it and lets it go; a later phase that needs the values regrows them from the coefficients."],
+    ["2.3 · Every byte counted", "Compact columns, lookups re-read", "Preprocessed columns kept compressed, lookup data re-read from the committed trace, decommitments computed from coefficients."],
+    ["2.4 · The check", "The same proof, verified", "Less memory must not mean a different proof: both sides are checked by the verifier."],
+  ],
+  falcon: [
+    ["3 · Falcon-512", "A post-quantum signature, checked by a Starknet account", "OpenZeppelin's verifier against the record, counted in Sierra gas on the same signature."],
+    ["3.1 · The signature", "Lattices instead of elliptic curves", "Falcon-512 rests on NTRU lattices (n = 512, q = 12289) and was selected by NIST for standardisation as FN-DSA. Shor's algorithm does not break it."],
+    ["3.2 · The cost", "Most of the gas goes to hashing", "Verifying expands the message with SHAKE-256: several Keccak-f[1600] permutations of 24 rounds each, written in Cairo."],
+    ["3.3 · What the record changed", "Hashing and arithmetic, rewritten", "Two 64-bit Keccak lanes per u128, rotations as bounded multiplications, chi without checks, an NTT mod 12289 with lazy reduction, the norm without divisions."],
+    ["3.4 · The check", "Same signature, same answer", "Both verifiers run on the same real signature and must accept it; the record is checked against the reference implementation."],
+  ],
+  mainnet: [
+    ["3.5 · Starknet mainnet", "Priced on live mainnet state", "Both accounts declared, deployed and used in one simulated transaction: nothing broadcast, the Falcon signature really verified."],
+  ],
+  end: [["Done", "Measured live, nothing pre-recorded", "The record sides follow provably.fast's live records. Run it yourself with one command: make up."]],
 };
-function narrate(step, title, body) {
+const BEAT_MS = { idle: 7000, fast: 5500, light: 7000, falcon: 4500 };
+let beatTimer = null;
+function show(step, title, body) {
   const n = $("#narrator");
   if (!n) return;
-  if (!title) [step, title, body] = NARRATION[step] || NARRATION.idle;
   $(".n-step", n).textContent = step;
   $(".n-title", n).textContent = title;
   $(".n-body", n).textContent = body;
   n.classList.remove("swap");
   void n.offsetWidth; // restart the entrance of the new text
   n.classList.add("swap");
+}
+// `narrate(key)` starts a key's beats; `narrate(step, title, body)` shows one line and stops them.
+function narrate(step, title, body) {
+  clearInterval(beatTimer);
+  beatTimer = null;
+  if (title) return show(step, title, body);
+  const beats = NARRATION[step] || NARRATION.idle;
+  let i = 0;
+  show(...beats[0]);
+  if (beats.length < 2) return;
+  const loop = step === "idle" || !NARRATION[step];
+  beatTimer = setInterval(() => {
+    i += 1;
+    if (i >= beats.length) {
+      if (!loop) { clearInterval(beatTimer); beatTimer = null; return; }
+      i = 0;
+    }
+    show(...beats[i]);
+  }, BEAT_MS[step] || 6000);
 }
 // What a lane measured, once both sides are in: the narrator's line for its result.
 function narrateResult(lane) {
