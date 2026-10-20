@@ -3,7 +3,8 @@
 #
 #   HARNESS_DIR=/path/with/privacy_prove_stdout.rs,privacy_verify.rs,pvfast_workload_s1.rs  scripts/setup.sh
 #
-# Stwo trees: github.com/starknet-innovation/proving at the season commits, plus the record patches in patches/.
+# Stwo trees: github.com/starknet-innovation/proving at the season commits, plus the light record's patch in patches/.
+# The fast and Falcon lanes' record sides follow the live frontiers: scripts/sync_frontier.sh builds them.
 # The proof worker and verifier entry points (privacy_prove_stdout.rs, privacy_verify.rs) are the evaluator's
 # own files that provably.fast gives participants for local measurement; they are not in the public fork, so
 # point HARNESS_DIR at your copy. Falcon trees: OpenZeppelin/cairo-pq-verifiers at the baseline commit, plus
@@ -40,7 +41,6 @@ stwo_tree() { # dir commit [patch]
 }
 
 stwo_tree stwo-pinned "$S2"
-stwo_tree stwo-fast-record "$S2" stwo-fast-record-5eafa818.diff
 stwo_tree stwo-s1-original "$S1"
 stwo_tree stwo-s1-light-record "$S1" stwo-light-record-7bb39eeb.diff
 
@@ -59,6 +59,4 @@ prep stwo-pinned "$B/inputs/s2_statement.json" || echo "note: prepare the season
 prep stwo-s1-original "$B/inputs/s1_statement.json" || echo "note: prepare the season 1 statement with your provably.fast client"
 
 clone "$PQ" "$OZ" "$B/falcon-oz-baseline"
-clone "$PQ" "$OZ" "$B/falcon-record"
-apply_once "$B/falcon-record" falcon-record-fj_97a86d12.patch
-echo "setup done: make run (the Falcon trees compile on their first race)"
+echo "setup done; the record sides of the fast and Falcon lanes come from scripts/sync_frontier.sh (make sync)"

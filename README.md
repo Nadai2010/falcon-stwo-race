@@ -41,9 +41,14 @@ Your numbers will differ: they depend on your CPU. "Side by side" pins each buil
 
 ```bash
 git clone https://github.com/Nadai2010/falcon-stwo-race && cd falcon-stwo-race
-HARNESS_DIR=/path/to/harness make setup   # builds the four provers, prepares the two Falcon trees (build/)
-make run                                    # http://127.0.0.1:8765
+HARNESS_DIR=/path/to/harness make up   # builds everything, syncs to the live records, opens http://127.0.0.1:8765
 ```
+
+That is the whole setup. The first run compiles the provers (expect a while); later runs only rebuild what moved.
+The record side of the fast and Falcon races always follows the live records: whenever the board promotes a new
+frontier, the dashboard rebuilds it in the background (races wait until it is ready), and each card reads who holds
+the record, and whose record it beat, on every page load. `make run` starts the dashboard without rebuilding,
+`make sync` only refreshes the record builds.
 
 Requirements: Linux, a Rust toolchain (the fork's `rust-toolchain.toml` pins it), [Scarb 2.18.0 and Starknet Foundry 0.59.0](https://foundry-rs.github.io/starknet-foundry/), Python 3.10+, about 16 GiB of free memory for the original light prover, and the evaluator's proof-worker entry points (see [docs/setup.md](docs/setup.md)). Already have builds? Point `config.local.json` at them instead of running `make setup`.
 
