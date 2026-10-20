@@ -40,7 +40,27 @@ def load_config() -> dict:
     paths = races["paths"] | (json.loads(local.read_text()).get("paths", {}) if local.exists() else {})
     races["paths"] = {k: str((ROOT / v).resolve()) if not os.path.isabs(v) else v for k, v in paths.items()}
     races["mainnet"] = json.loads(local.read_text()).get("mainnet") if local.exists() else None
+    races["frontier"] = synced_frontier(races["paths"])
     return races
+
+
+def synced_frontier(paths: dict) -> dict | None:
+    """The builds scripts/sync_frontier.sh made for the live frontiers (build/frontier.json), put in place of the
+    fast and Falcon lanes' paths: the fast lane then races the season's pinned prover against the promoted
+    frontier, both built with the evaluator's flags. None (and the configured paths) until a sync has run."""
+    try:
+        f = json.loads((ROOT / "build" / "frontier.json").read_text())
+    except (OSError, ValueError):
+        return None
+    pinned, record = f["fast"]["pinned"], f["fast"]["record"]
+    paths.update({
+        "fast_original_prove": f"{pinned}/target/release/privacy_prove_stdout",
+        "fast_original_verify": f"{pinned}/target/release/privacy_verify",
+        "fast_record_prove": f"{record}/target/release/privacy_prove_stdout",
+        "fast_record_verify": f"{pinned}/target/release/privacy_verify",
+        "falcon_record_repo": f["falcon"]["record"],
+    })
+    return f
 
 
 def mainnet_ready(cfg: dict | None) -> bool:

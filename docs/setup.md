@@ -42,3 +42,15 @@ The Falcon card prices one Falcon-signed transaction per account on Starknet mai
 - `falcon_key` can be any Falcon key (`falcon_signer.py keygen`): nothing is broadcast.
 
 Without this block the card shows `web/data/mainnet-sim.json`, the last recorded simulation.
+
+
+## Staying in sync with the live frontiers
+
+`scripts/sync_frontier.sh` keeps the record side of the fast and Falcon lanes on the current records: the head of
+`starknet-innovation/proving`'s `provable-100-season` branch (the promoted frontier) and the Falcon record's patch from
+the Falcon results API. The fast lane's pinned prover is rebuilt beside it with the evaluator's flags
+(`-C target-cpu=native -C opt-level=3 -C codegen-units=1`), so both sides of the race use the same compiler settings.
+The server runs the script in the background when it starts and, at most every 15 minutes, when the page loads; a
+race asked for while it builds is refused with a note. It reads the harness files from `HARNESS_DIR` or from
+`"harness_dir"` in `config.local.json`, writes `build/frontier.json` only after every build succeeded, and the lanes
+use those builds from then on (the side labels name the frontier commit and its holder).
