@@ -142,6 +142,12 @@ async function replay(file) {
   const how = run.mode === "parallel" ? "side by side" : "one after the other";
   box.textContent = `Replay of a run measured on ${run.recorded}, ${run.machine}, ${how}.`;
   for (const lane of state.lanes) reset(lane.id);
+  // A replay shows the builds it recorded, not whatever the lanes run today.
+  for (const [id, sides] of Object.entries(run.labels || {})) {
+    for (const side of ["original", "record"]) {
+      if (state.view[id] && sides[side]) $(".side-label", sideEl(id, side)).textContent = sides[side];
+    }
+  }
   let i = 0;
   const step = () => {
     for (let k = 0; k < 3 && i < run.events.length; k++) {
