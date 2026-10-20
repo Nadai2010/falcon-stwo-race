@@ -156,6 +156,7 @@ async function start() {
   stopReplay();
   try {
     const st = await (await fetch("/api/status")).json();
+    if (st.sync === "building") { notice("Updating the record builds to the live frontier. Try again in a few minutes."); return; }
     if (st.busy) { notice("A race is still running or stopping. Try again in a few seconds."); return; }
   } catch { notice("The race server is not reachable. Start it with make run."); return; }
   for (const lane of state.lanes) reset(lane.id);

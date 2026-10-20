@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import subprocess
 import signal
 import sys
 import threading
@@ -47,6 +48,46 @@ def strk_usd() -> dict:
         except (OSError, ValueError, KeyError):
             continue
     return {"usd": None, "source": None, "fetched": int(now)}
+
+
+# The record builds follow the live frontiers: scripts/sync_frontier.sh runs in the background when the server
+# starts and, at most every SYNC_EVERY_S, when a page loads. It holds the race lock while it builds, so a build
+# never runs beside a race (both would be measured slower) and a race asked for meanwhile is refused with a note.
+SYNC_EVERY_S = 900
+SYNC = {"state": "idle", "last": 0.0, "error": None}
+
+
+def maybe_sync() -> None:
+    if time.time() - SYNC["last"] < SYNC_EVERY_S or not BUSY.acquire(blocking=False):
+        return
+    SYNC.update(state="building", last=time.time())
+
+    def run() -> None:
+        try:
+            done = subprocess.run(["bash", str(race.ROOT / "scripts" / "sync_frontier.sh")],
+                                  capture_output=True, text=True)
+            SYNC.update(error=None if done.returncode == 0 else done.stderr.strip()[-300:])
+            print(f"sync: {done.stdout.strip() or SYNC['error']}", flush=True)
+        finally:
+            SYNC["state"] = "idle"
+            BUSY.release()
+
+    threading.Thread(target=run, daemon=True).start()
+
+
+def lane_labels(cfg: dict) -> dict:
+    """Side labels that say which build runs: the synced frontier and its holder when there is one."""
+    f, live = cfg.get("frontier"), board.board()
+    labels = {}
+    if f:
+        fast, falcon = live.get("fast") or {}, live.get("falcon") or {}
+        commit = f["fast"]["commit"][:9]
+        who = f" (@{fast['holder']})" if fast.get("commit") == commit else ""
+        labels["fast"] = {"original": "Stwo, pinned prover d6276445", "record": f"Frontier {commit}{who}"}
+        job = f["falcon"]["job"]
+        who = f" (@{falcon['holder']})" if falcon.get("holder") else ""
+        labels["falcon"] = {"record": f"Record {job[:11]}{who}"}
+    return labels
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -96,16 +137,18 @@ class Handler(BaseHTTPRequestHandler):
             self._json(strk_usd())
             return
         if url.path == "/api/board":
+            maybe_sync()
             self._json(board.board())
             return
         if url.path == "/api/status":
-            self._json({"busy": BUSY.locked()})
+            self._json({"busy": BUSY.locked(), "sync": SYNC["state"]})
             return
         if url.path == "/api/config":
             cfg = race.load_config()
+            labels = lane_labels(cfg)
             self._json({"lanes": [{k: v for k, v in lane.items() if k not in ("original", "record")}
-                                  | {"original": {"label": lane["original"]["label"]},
-                                     "record": {"label": lane["record"]["label"]}}
+                                  | {side: {"label": labels.get(lane["id"], {}).get(side, lane[side]["label"])}
+                                     for side in ("original", "record")}
                                   for lane in cfg["lanes"]],
                         "missing": [k for k, v in cfg["paths"].items() if not Path(v).exists()]})
         elif url.path == "/api/race":
@@ -147,6 +190,7 @@ def main() -> None:
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
     signal.signal(signal.SIGTERM, lambda *_: (race.kill_all(), sys.exit(0)))
     srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    maybe_sync()
     srv.daemon_threads = True
     print(f"falcon-stwo-race on http://127.0.0.1:{port}", flush=True)
     try:
